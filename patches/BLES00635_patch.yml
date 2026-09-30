@@ -1,0 +1,37 @@
+Version: 1.2
+
+Anchors:
+  T6_Lili_Probe_Hook: &T6_Lili_Probe_Hook
+    - [ be32, 0x0, 0x8142C9DC ]
+    - [ be32, 0x0, 0x2F8A0000 ]
+    - [ be32, 0x0, 0x419E0048 ]
+    - [ be32, 0x0, 0x818A0008 ]
+    - [ be32, 0x0, 0x2F8C0000 ]
+    - [ be32, 0x0, 0x419E003C ]
+    - [ be32, 0x0, 0x7F836000 ]
+    - [ be32, 0x0, 0x409E0034 ]
+    - [ be32, 0x0, 0x816C0054 ]
+    - [ be32, 0x0, 0x2F8B001E ]
+    - [ be32, 0x0, 0x409E0028 ]
+    - [ be32, 0x0, 0x816C010C ]
+    - [ be32, 0x0, 0x2F8B1952 ]
+    - [ be32, 0x0, 0x409E001C ]
+    - [ be32, 0x0, 0x816C01E8 ]
+    - [ be32, 0x0, 0x2F8B0032 ]
+    - [ be32, 0x0, 0x409E0010 ]
+    - [ be32, 0x0, 0x3D6000D8 ]
+    - [ be32, 0x0, 0x616B0100 ]
+    - [ be32, 0x0, 0x908B0000 ]
+    - [ be32, 0x0, 0xF821FF81 ]
+
+PPU-e5555dba174ea9b54ed7c5eef23cb9dd31e8f3bf:
+  "CPU Lili Ki Charge Probe":
+    Games:
+      "TEKKEN 6":
+        BLES00635: [ 01.03 ]
+    Author: "ChatGPT / Patryk"
+    Notes: "v0.6 probe only: records resolver r4 for active P2 Lili at 0xD80100. Does not alter gameplay."
+    Patch Version: 0.6
+    Patch:
+      - [ calloc, 0x001C4E20, 21 ]
+      - [ load, *T6_Lili_Probe_Hook ]
