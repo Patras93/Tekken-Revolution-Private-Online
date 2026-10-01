@@ -154,6 +154,95 @@ else {
 
 Write-Host 'Hook instalacja: WYLACZONA do czasu potwierdzenia bezpiecznego loadera.'
 
+$nativePatchSource = Join-Path $repoRoot 'local_patch\NPUB31250_patch.yml'
+$patchDir = Join-Path $rpcs3Dir 'config\patches'
+$nativePatchTarget = Join-Path $patchDir 'NPUB31250_patch.yml'
+$patchConfigPath = Join-Path $rpcs3Dir 'config\patch_config.yml'
+$patchConfigBackup = Join-Path $rpcs3Dir 'config\patch_config.yml.patras1993.bak'
+$patchHashKey = 'PPU-1504b75ba97abccdf2d0a93dd93aaff10591a01e:'
+$patchDescriptionLine = '  "Patras1993 Revolution Runtime Patches":'
+
+if (-not (Test-Path -LiteralPath $nativePatchSource)) {
+    throw "Brak natywnego patcha Revolution: $nativePatchSource"
+}
+
+New-Item -ItemType Directory -Path $patchDir -Force | Out-Null
+Copy-Item -LiteralPath $nativePatchSource -Destination $nativePatchTarget -Force
+Write-Host "RPCS3 patch: zainstalowany -> $nativePatchTarget"
+
+$configLines = @()
+if (Test-Path -LiteralPath $patchConfigPath) {
+    $configLines = @([IO.File]::ReadAllLines($patchConfigPath))
+    if (-not (Test-Path -LiteralPath $patchConfigBackup)) {
+        [IO.File]::Copy($patchConfigPath, $patchConfigBackup, $false)
+        Write-Host "RPCS3 patch_config: kopia zapasowa -> $patchConfigBackup"
+    }
+}
+
+$configList = New-Object 'System.Collections.Generic.List[string]'
+foreach ($line in $configLines) {
+    [void]$configList.Add($line)
+}
+
+# Usuń tylko nasz poprzedni blok. Innych patchy nie ruszamy.
+$descIndex = -1
+for ($i = 0; $i -lt $configList.Count; $i++) {
+    if ($configList[$i] -eq $patchDescriptionLine) {
+        $descIndex = $i
+        break
+    }
+}
+
+if ($descIndex -ge 0) {
+    $endIndex = $configList.Count
+    for ($i = $descIndex + 1; $i -lt $configList.Count; $i++) {
+        if ($configList[$i] -match '^\S.*:\s*$' -or $configList[$i] -match '^  \S.*:\s*$') {
+            $endIndex = $i
+            break
+        }
+    }
+
+    for ($i = $endIndex - 1; $i -ge $descIndex; $i--) {
+        $configList.RemoveAt($i)
+    }
+}
+
+$hashIndex = -1
+for ($i = 0; $i -lt $configList.Count; $i++) {
+    if ($configList[$i] -eq $patchHashKey) {
+        $hashIndex = $i
+        break
+    }
+}
+
+$enableBlock = @(
+    $patchDescriptionLine,
+    '    "TEKKEN REVOLUTION":',
+    '      NPUB31250:',
+    '        01.05:',
+    '          Enabled: true'
+)
+
+if ($hashIndex -lt 0) {
+    if ($configList.Count -gt 0 -and $configList[$configList.Count - 1] -ne '') {
+        [void]$configList.Add('')
+    }
+    [void]$configList.Add($patchHashKey)
+    foreach ($line in $enableBlock) {
+        [void]$configList.Add($line)
+    }
+}
+else {
+    $insertAt = $hashIndex + 1
+    for ($i = $enableBlock.Count - 1; $i -ge 0; $i--) {
+        $configList.Insert($insertAt, $enableBlock[$i])
+    }
+}
+
+[IO.File]::WriteAllLines($patchConfigPath, $configList, (New-Object System.Text.UTF8Encoding($false)))
+Write-Host 'RPCS3 patch: Patras1993 Revolution Runtime Patches = ENABLED.'
+
+
 $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
 $hostsBackup = "$hostsPath.patras1993.bak"
 
