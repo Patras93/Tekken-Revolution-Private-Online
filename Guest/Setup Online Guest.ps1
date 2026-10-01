@@ -3,7 +3,9 @@ Write-Host ''
 Write-Host 'TEKKEN REVOLUTION ONLINE - GUEST'
 $hostIp=Read-Host 'Podaj adres Tailscale hosta (np. 100.x.x.x)'
 if($hostIp -notmatch '^100\.(?:[0-9]{1,3}\.){2}[0-9]{1,3}$'){throw 'Nieprawidlowy adres Tailscale.'}
+$preferredRpcs3='E:\instalacje gier\rpcs3-v0.0.43-20146-4d88114c_win64\rpcs3.exe'
 $candidates=@(
+  $preferredRpcs3,
   (Get-Command rpcs3.exe -ErrorAction SilentlyContinue).Source,
   (Join-Path $env:ProgramFiles 'RPCS3\rpcs3.exe'),
   (Join-Path ${env:ProgramFiles(x86)} 'RPCS3\rpcs3.exe'),
