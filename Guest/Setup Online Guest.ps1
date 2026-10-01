@@ -23,6 +23,8 @@ if(-not $rpcs3Exe){
 if(-not $rpcs3Exe){throw 'Nie znaleziono rpcs3.exe.'}
 $rpcs3=[IO.Path]::GetDirectoryName($rpcs3Exe)
 Write-Host "Znaleziono RPCS3: $rpcs3"
+$configPath=Join-Path $PSScriptRoot 'guest_config.json'
+@{host_tailscale_ip=$hostIp;rpcs3_directory=$rpcs3} | ConvertTo-Json | Set-Content -LiteralPath $configPath -Encoding utf8
 $game=Join-Path $rpcs3 'dev_hdd0\game\NPUB31250\USRDIR\EBOOT.BIN'
 if(-not (Test-Path $game)){throw 'Znaleziono RPCS3, ale nie znaleziono Tekken Revolution NPUB31250.'}
 $hosts="$env:SystemRoot\System32\drivers\etc\hosts"
