@@ -5,8 +5,7 @@ Write-Host 'PATRAS1993 - TEKKEN REVOLUTION ONLINE GUEST'
 Write-Host ''
 
 $expectedBuild = '0.0.43-20147-dfc0542a'
-$repoRoot = Split-Path -Parent $PSScriptRoot
-$nativePatchSource = Join-Path $repoRoot 'local_patch\NPUB31250_patch.yml'
+$nativePatchSource = Join-Path $PSScriptRoot 'Patras1993_NPUB31250_patch.yml'
 
 $hostIp = Read-Host 'Podaj adres Tailscale hosta Patras1993 (100.x.x.x)'
 if ($hostIp -notmatch '^100\.(?:[0-9]{1,3}\.){2}[0-9]{1,3}$') {
