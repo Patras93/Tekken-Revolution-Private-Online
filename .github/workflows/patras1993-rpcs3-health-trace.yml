@@ -1,0 +1,104 @@
+name: Build Patras1993 RPCS3 HP Trace
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - patras1993-independent-server
+    paths:
+      - ".github/workflows/patras1993-rpcs3-health-trace.yml"
+      - "diagnostics/rpcs3-health-trace/**"
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows-x64:
+    name: RPCS3 20147 HP Trace Windows x64
+    runs-on: windows-2025
+
+    env:
+      CCACHE_DIR: 'C:\\ccache'
+      BUILD_ARTIFACTSTAGINGDIRECTORY: ${{ github.workspace }}/artifacts/
+
+    steps:
+      - name: Checkout Patras1993 tools
+        uses: actions/checkout@v4
+        with:
+          path: patras1993
+
+      - name: Checkout pinned RPCS3 20147
+        uses: actions/checkout@v4
+        with:
+          repository: RPCS3/rpcs3
+          ref: dfc0542a9fbf9a23b0b8aa526ff0e8430127719f
+          fetch-depth: 0
+          path: rpcs3-src
+
+      - name: Apply Patras1993 HP trace instrumentation
+        shell: pwsh
+        run: python "${{ github.workspace }}\\patras1993\\diagnostics\\rpcs3-health-trace\\apply_trace_patch.py" "${{ github.workspace }}\\rpcs3-src"
+
+      - name: Setup MSYS2 clang64
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: clang64
+          update: true
+          cache: true
+          install: |
+            mingw-w64-clang-x86_64-clang
+            mingw-w64-clang-x86_64-ccache
+            mingw-w64-clang-x86_64-cmake
+            mingw-w64-clang-x86_64-lld
+            mingw-w64-clang-x86_64-ninja
+            mingw-w64-clang-x86_64-llvm
+            mingw-w64-clang-x86_64-ffmpeg
+            mingw-w64-clang-x86_64-opencv
+            mingw-w64-clang-x86_64-iconv
+            mingw-w64-clang-x86_64-glew
+            mingw-w64-clang-x86_64-vulkan
+            mingw-w64-clang-x86_64-vulkan-headers
+            mingw-w64-clang-x86_64-vulkan-loader
+            mingw-w64-clang-x86_64-gtest
+            mingw-w64-clang-x86_64-qt6-base
+            mingw-w64-clang-x86_64-qt6-declarative
+            mingw-w64-clang-x86_64-qt6-multimedia
+            mingw-w64-clang-x86_64-qt6-svg
+            mingw-w64-clang-x86_64-qt6-tools
+            mingw-w64-clang-x86_64-qt6-translations
+            base-devel
+            curl
+            git
+            p7zip
+
+      - name: Build diagnostic RPCS3
+        shell: msys2 {0}
+        run: |
+          set -eux
+          cd "${{ github.workspace }}/rpcs3-src"
+          export CCACHE_DIR=$(cygpath -u "$CCACHE_DIR")
+          .ci/setup-windows-ci-vars.sh x86_64 clang
+          .ci/build-windows-clang.sh x86_64 clang64
+
+      - name: Add diagnostic marker
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path "${{ env.BUILD_ARTIFACTSTAGINGDIRECTORY }}" | Out-Null
+          @"
+          PATRAS1993 RPCS3 HEALTH TRACE
+          Base: RPCS3 0.0.43-20147-dfc0542a
+          Source: dfc0542a9fbf9a23b0b8aa526ff0e8430127719f
+          Purpose: offline diagnostic only
+          P1 HP guest address: 0x012D9F74
+          P2 HP guest address: 0x012DC414
+          Use PPU Interpreter while tracing.
+          Look for PATRAS1993_HP_WRITE in RPCS3.log.
+          "@ | Set-Content -Encoding UTF8 "${{ env.BUILD_ARTIFACTSTAGINGDIRECTORY }}\\PATRAS1993-HEALTH-TRACE.txt"
+
+      - name: Upload diagnostic build
+        uses: actions/upload-artifact@v4
+        with:
+          name: Patras1993-RPCS3-20147-HP-Trace-Windows-x64
+          path: ${{ env.BUILD_ARTIFACTSTAGINGDIRECTORY }}
+          compression-level: 0
+          if-no-files-found: error
