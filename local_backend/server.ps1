@@ -10,7 +10,7 @@ $thumbprint = (Get-Content -LiteralPath $thumbFile -Raw).Trim()
 $cert = Get-Item "Cert:\CurrentUser\My\$thumbprint" -ErrorAction Stop
 $listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Any,443)
 $listener.Start()
-"LISTEN 127.0.0.1:443 thumbprint=$($cert.Thumbprint)" | Add-Content -LiteralPath $log
+"LISTEN 0.0.0.0:443 thumbprint=$($cert.Thumbprint)" | Add-Content -LiteralPath $log
 
 function Send-Response($ssl,[int]$status,[string]$ctype,[byte[]]$body,[hashtable]$extra){
     $reason = if($status -eq 200){'OK'}elseif($status -eq 404){'Not Found'}else{'Error'}
