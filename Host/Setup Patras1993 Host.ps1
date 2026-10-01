@@ -122,31 +122,37 @@ if (-not (Test-Path -LiteralPath $gameEboot)) {
 } | ConvertTo-Json | Set-Content -LiteralPath $hostConfigFile -Encoding utf8
 
 $hookTarget = Join-Path $rpcs3Dir 'version.dll'
-$sourceHash = (Get-FileHash -LiteralPath $hookSource -Algorithm SHA256).Hash
-$targetHash = if (Test-Path -LiteralPath $hookTarget) { (Get-FileHash -LiteralPath $hookTarget -Algorithm SHA256).Hash } else { $null }
+$hookBackup = Join-Path $rpcs3Dir 'version.dll.pre-patras1993.bak'
+$hookSourceHash = (Get-FileHash -LiteralPath $hookSource -Algorithm SHA256).Hash
+$hookTargetHash = $null
 
-if ($targetHash -ne $sourceHash) {
+if (Test-Path -LiteralPath $hookTarget) {
+    $hookTargetHash = (Get-FileHash -LiteralPath $hookTarget -Algorithm SHA256).Hash
+}
+
+if ($hookTargetHash -eq $hookSourceHash) {
     $runningRpcs3 = Get-Process rpcs3 -ErrorAction SilentlyContinue
     if ($runningRpcs3) {
-        Write-Host 'RPCS3: zamykanie przed instalacja hooka...'
         $runningRpcs3 | Stop-Process -Force
         Start-Sleep -Milliseconds 500
     }
 
-    if (Test-Path -LiteralPath $hookTarget) {
-        $backup = Join-Path $rpcs3Dir 'version.dll.pre-patras1993.bak'
-        if (-not (Test-Path -LiteralPath $backup)) {
-            Copy-Item -LiteralPath $hookTarget -Destination $backup -Force
-            Write-Host "Hook: kopia starego version.dll -> $backup"
-        }
-    }
+    Remove-Item -LiteralPath $hookTarget -Force
+    Write-Host "Hook rollback: usunieto Patras1993 version.dll z katalogu RPCS3."
 
-    Copy-Item -LiteralPath $hookSource -Destination $hookTarget -Force
-    Write-Host "Hook: zainstalowany -> $hookTarget"
+    if (Test-Path -LiteralPath $hookBackup) {
+        Move-Item -LiteralPath $hookBackup -Destination $hookTarget -Force
+        Write-Host "Hook rollback: przywrocono poprzedni version.dll."
+    }
+}
+elseif (Test-Path -LiteralPath $hookTarget) {
+    Write-Host 'Hook rollback: znaleziono obcy version.dll - nie ruszam go.'
 }
 else {
-    Write-Host 'Hook: version.dll Patras1993 juz zainstalowany.'
+    Write-Host 'Hook rollback: brak Patras1993 version.dll przy RPCS3 - OK.'
 }
+
+Write-Host 'Hook instalacja: WYLACZONA do czasu potwierdzenia bezpiecznego loadera.'
 
 $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
 $hostLines = Get-Content -LiteralPath $hostsPath -ErrorAction Stop |
@@ -211,7 +217,7 @@ Write-Host 'TCP 443: OK'
 Write-Host 'TCP 31313: OK'
 Write-Host 'UDP 3657: OK'
 Write-Host "RPCS3: $rpcs3Exe"
-Write-Host "Hook: $hookTarget"
+Write-Host 'Hook: nie jest wstrzykiwany do RPCS3'
 Write-Host "Tekken Revolution: $gameEboot"
 Write-Host 'BTB Launcher nie jest instalowany ani uruchamiany.'
 Write-Host 'PATRAS1993 HOST SETUP GOTOWY.'
