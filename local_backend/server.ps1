@@ -35,8 +35,119 @@ while($true){
         $parts = $line.Split(' ')
         $method = $parts[0]
         $path = $parts[1]
-        while(($h = $reader.ReadLine()) -ne $null -and $h -ne ''){}
-        "$(Get-Date -Format o) $method $path" | Add-Content -LiteralPath $log
+        $hostHeader = ''
+        $userAgent = ''
+        while(($h = $reader.ReadLine()) -ne $null -and $h -ne ''){
+            if($h -match '^(?i)Host:\s*(.+)
+        $extra = @{}
+        switch -Regex ($path) {
+            '^/resolve/NPUB31250$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'resolve_NPUB31250.json'))
+                Send-Response $ssl 200 'application/json' $body $extra
+            }
+            '^/patches/tr$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'patches_tr.bin'))
+                $extra=@{'x-comm-id'='NPWR04645';'x-sub-id'='01';'x-title-id'='NPUB31250'}
+                Send-Response $ssl 200 'application/octet-stream' $body $extra
+            }
+            '^/modules/tr/manifest$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'modules_tr_manifest.json'))
+                Send-Response $ssl 200 'application/json' $body $extra
+            }
+            '^/modules/tr/tr_logic\.dll$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'tr_logic.dll'))
+                Send-Response $ssl 200 'application/octet-stream' $body $extra
+            }
+            '^/launcher/config$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'launcher_config.json'))
+                Send-Response $ssl 200 'application/json' $body $extra
+            }
+            '^/launcher/restart_epoch$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'restart_epoch.json'))
+                Send-Response $ssl 200 'application/json' $body $extra
+            }
+            '^/launcher/hook/windows$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'version.dll.original'))
+                Send-Response $ssl 200 'application/octet-stream' $body $extra
+            }
+            '^/launcher/updater/windows/binary$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'tr_updater.exe'))
+                Send-Response $ssl 200 'application/octet-stream' $body $extra
+            }
+            '^/launcher/update/windows/manifest$' {
+                $body=[Text.Encoding]::UTF8.GetBytes('{"available":false,"file_size":0,"filename":"","sha256":"","signature":""}')
+                Send-Response $ssl 200 'application/json' $body $extra
+            }
+            default {
+                $body=[Text.Encoding]::UTF8.GetBytes('{"detail":"Not Found"}')
+                Send-Response $ssl 404 'application/json' $body $extra
+            }
+        }
+    } catch {
+        "$(Get-Date -Format o) ERROR $($_.Exception.Message)" | Add-Content -LiteralPath $log
+    } finally {
+        try{$ssl.Dispose()}catch{}
+        $client.Close()
+    }
+}
+
+){ $hostHeader = $Matches[1].Trim() }
+            elseif($h -match '^(?i)User-Agent:\s*(.+)
+        $extra = @{}
+        switch -Regex ($path) {
+            '^/resolve/NPUB31250$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'resolve_NPUB31250.json'))
+                Send-Response $ssl 200 'application/json' $body $extra
+            }
+            '^/patches/tr$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'patches_tr.bin'))
+                $extra=@{'x-comm-id'='NPWR04645';'x-sub-id'='01';'x-title-id'='NPUB31250'}
+                Send-Response $ssl 200 'application/octet-stream' $body $extra
+            }
+            '^/modules/tr/manifest$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'modules_tr_manifest.json'))
+                Send-Response $ssl 200 'application/json' $body $extra
+            }
+            '^/modules/tr/tr_logic\.dll$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'tr_logic.dll'))
+                Send-Response $ssl 200 'application/octet-stream' $body $extra
+            }
+            '^/launcher/config$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'launcher_config.json'))
+                Send-Response $ssl 200 'application/json' $body $extra
+            }
+            '^/launcher/restart_epoch$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'restart_epoch.json'))
+                Send-Response $ssl 200 'application/json' $body $extra
+            }
+            '^/launcher/hook/windows$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'version.dll.original'))
+                Send-Response $ssl 200 'application/octet-stream' $body $extra
+            }
+            '^/launcher/updater/windows/binary$' {
+                $body=[IO.File]::ReadAllBytes((Join-Path $root 'tr_updater.exe'))
+                Send-Response $ssl 200 'application/octet-stream' $body $extra
+            }
+            '^/launcher/update/windows/manifest$' {
+                $body=[Text.Encoding]::UTF8.GetBytes('{"available":false,"file_size":0,"filename":"","sha256":"","signature":""}')
+                Send-Response $ssl 200 'application/json' $body $extra
+            }
+            default {
+                $body=[Text.Encoding]::UTF8.GetBytes('{"detail":"Not Found"}')
+                Send-Response $ssl 404 'application/json' $body $extra
+            }
+        }
+    } catch {
+        "$(Get-Date -Format o) ERROR $($_.Exception.Message)" | Add-Content -LiteralPath $log
+    } finally {
+        try{$ssl.Dispose()}catch{}
+        $client.Close()
+    }
+}
+
+){ $userAgent = $Matches[1].Trim() }
+        }
+        "$(Get-Date -Format o) $method host=$hostHeader path=$path ua=$userAgent" | Add-Content -LiteralPath $log
         $extra = @{}
         switch -Regex ($path) {
             '^/resolve/NPUB31250$' {
