@@ -4,9 +4,11 @@ $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $log = Join-Path $root 'server.log'
 "START $(Get-Date -Format o)" | Set-Content -LiteralPath $log -Encoding utf8
 
-$thumbprint = '8C8CEEC481DCF881CAEC1124F13DC4099B6BAEF3'
+$thumbFile = Join-Path $root 'server_cert_thumbprint.txt'
+if(-not (Test-Path $thumbFile)){ throw 'Brak server_cert_thumbprint.txt. Uruchom Host\\Setup Patras1993 Host.cmd jako administrator.' }
+$thumbprint = (Get-Content -LiteralPath $thumbFile -Raw).Trim()
 $cert = Get-Item "Cert:\CurrentUser\My\$thumbprint" -ErrorAction Stop
-$listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback,443)
+$listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Any,443)
 $listener.Start()
 "LISTEN 127.0.0.1:443 thumbprint=$($cert.Thumbprint)" | Add-Content -LiteralPath $log
 
