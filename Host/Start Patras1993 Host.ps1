@@ -4,31 +4,40 @@ $repo = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $backend = Join-Path $repo 'local_backend\server.ps1'
 $rpcnDir = Join-Path $repo 'local_rpcn'
 $rpcn = Join-Path $rpcnDir 'rpcn.exe'
+$rpcnVersionFile = Join-Path $rpcnDir 'rpcn_version.txt'
 $rpcnCert = Join-Path $rpcnDir 'cert.pem'
 $rpcnKey = Join-Path $rpcnDir 'key.pem'
+$requiredRpcnVersion = '1.10.0'
 
 Write-Host '=== PATRAS1993 HOST ==='
 Write-Host "Katalog: $repo"
 
 if (-not (Test-Path -LiteralPath $backend)) { throw "Brak: $backend" }
 if (-not (Test-Path -LiteralPath $rpcn)) { throw "Brak: $rpcn" }
+if (-not (Test-Path -LiteralPath $rpcnVersionFile)) {
+    throw 'Brak local_rpcn\rpcn_version.txt. Uruchom Host\Setup Patras1993 Host.cmd jako administrator.'
+}
 
-Push-Location $rpcnDir
-try {
-    $rpcnVersionText = (& $rpcn --version 2>&1 | Out-String).Trim()
+$rpcnVersion = (Get-Content -LiteralPath $rpcnVersionFile -Raw).Trim()
+if ($rpcnVersion -ne $requiredRpcnVersion) {
+    throw "RPCN musi miec wersje $requiredRpcnVersion (protocol 32). Uruchom Host\Setup Patras1993 Host.cmd jako administrator. Zapisana wersja: $rpcnVersion"
 }
-finally {
-    Pop-Location
-}
-if ($rpcnVersionText -notmatch '1\.10\.0') {
-    throw "RPCN musi miec wersje 1.10.0 (protocol 32). Uruchom Host\\Setup Patras1993 Host.cmd jako administrator. Wykryto: $rpcnVersionText"
-}
-Write-Host "RPCN wersja: $rpcnVersionText (protocol 32)"
+Write-Host "RPCN wersja: $rpcnVersion (protocol 32)"
 
-function PortOpen([int]$Port) {
+function TcpPortOpen([int]$Port) {
     try {
         return [bool](Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction Stop)
-    } catch {
+    }
+    catch {
+        return $false
+    }
+}
+
+function UdpPortOpen([int]$Port) {
+    try {
+        return [bool](Get-NetUDPEndpoint -LocalPort $Port -ErrorAction Stop)
+    }
+    catch {
         return $false
     }
 }
@@ -40,43 +49,56 @@ if (-not (Test-Path -LiteralPath $rpcnCert) -or -not (Test-Path -LiteralPath $rp
         throw 'Nie udalo sie wygenerowac cert.pem/key.pem RPCN.'
     }
     Write-Host 'RPCN: certyfikat wygenerowany.'
-} else {
+}
+else {
     Write-Host 'RPCN: cert.pem/key.pem OK.'
 }
 
-if (-not (PortOpen 443)) {
+if (-not (TcpPortOpen 443)) {
     Write-Host 'Backend: uruchamianie na TCP 443...'
     Start-Process -FilePath 'powershell.exe' -WorkingDirectory $repo -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',$backend
-} else {
+}
+else {
     Write-Host 'Backend: TCP 443 juz dziala.'
 }
 
-if (-not (PortOpen 31313)) {
-    Write-Host 'RPCN: uruchamianie na TCP 31313...'
+$rpcnTcpBefore = TcpPortOpen 31313
+$rpcnUdpBefore = UdpPortOpen 3657
+
+if (-not $rpcnTcpBefore) {
+    if ($rpcnUdpBefore) {
+        throw 'UDP 3657 jest juz zajety, ale TCP 31313 nie nasluchuje. Zamknij stary proces RPCN i uruchom Host ponownie.'
+    }
+
+    Write-Host 'RPCN: uruchamianie TCP 31313 / UDP 3657...'
     Start-Process -FilePath $rpcn -WorkingDirectory $rpcnDir -WindowStyle Normal
-} else {
+}
+else {
     Write-Host 'RPCN: TCP 31313 juz dziala.'
 }
 
 $deadline = (Get-Date).AddSeconds(15)
 while ((Get-Date) -lt $deadline) {
-    $https = PortOpen 443
-    $rpcnTcp = PortOpen 31313
-    if ($https -and $rpcnTcp) { break }
+    $https = TcpPortOpen 443
+    $rpcnTcp = TcpPortOpen 31313
+    $rpcnUdp = UdpPortOpen 3657
+    if ($https -and $rpcnTcp -and $rpcnUdp) { break }
     Start-Sleep -Milliseconds 250
 }
 
-$https = PortOpen 443
-$rpcnTcp = PortOpen 31313
+$https = TcpPortOpen 443
+$rpcnTcp = TcpPortOpen 31313
+$rpcnUdp = UdpPortOpen 3657
 
 Write-Host ''
 Write-Host '=== STATUS ==='
-Write-Host ("HTTPS 443 : " + ($(if($https){'OK'}else{'BLAD'})))
-Write-Host ("RPCN 31313: " + ($(if($rpcnTcp){'OK'}else{'BLAD'})))
-Write-Host 'RPCN UDP 3657: sprawdzany przez log RPCN.'
+Write-Host ("HTTPS TCP 443 : " + ($(if($https){'OK'}else{'BLAD'})))
+Write-Host ("RPCN TCP 31313: " + ($(if($rpcnTcp){'OK'}else{'BLAD'})))
+Write-Host ("RPCN UDP 3657 : " + ($(if($rpcnUdp){'OK'}else{'BLAD'})))
 Write-Host ''
 Write-Host 'Patras1993 Host zakonczyl start.'
-if (-not $https -or -not $rpcnTcp) {
+
+if (-not $https -or -not $rpcnTcp -or -not $rpcnUdp) {
     Write-Host 'UWAGA: jeden z wymaganych portow nie nasluchuje.'
     exit 2
 }
