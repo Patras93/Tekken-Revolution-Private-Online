@@ -11,7 +11,7 @@ if(-not $cert){
 }
 
 $thumb=$cert.Thumbprint.ToUpperInvariant()
-$envFile=Join-Path $root '..\..\local_backend\server_cert_thumbprint.txt'
+$repoRoot = Split-Path -Parent $root`n$envFile=Join-Path $repoRoot 'local_backend\server_cert_thumbprint.txt'
 [IO.File]::WriteAllText($envFile,$thumb,[Text.UTF8Encoding]::new($false))
 
 New-NetFirewallRule -DisplayName 'Patras1993 Tekken Revolution HTTPS' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 443 -Profile Any -ErrorAction SilentlyContinue | Out-Null
