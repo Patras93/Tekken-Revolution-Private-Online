@@ -15,7 +15,13 @@ function Get-RpcnVersion {
     param([string]$Exe)
     if (-not (Test-Path -LiteralPath $Exe)) { return $null }
     try {
-        $out = (& $Exe --version 2>&1 | Out-String).Trim()
+        Push-Location (Split-Path -Parent $Exe)
+        try {
+            $out = (& $Exe --version 2>&1 | Out-String).Trim()
+        }
+        finally {
+            Pop-Location
+        }
         if ($out -match 'RPCN\s+v?([0-9]+\.[0-9]+\.[0-9]+)') { return $Matches[1] }
         if ($out -match '([0-9]+\.[0-9]+\.[0-9]+)') { return $Matches[1] }
     } catch {}
