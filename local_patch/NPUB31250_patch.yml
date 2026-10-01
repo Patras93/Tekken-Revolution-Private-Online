@@ -463,3 +463,22 @@ PPU-1504b75ba97abccdf2d0a93dd93aaff10591a01e:
       - [ be32, 0x00EC2D8C, 0x4BFFFFA4 ]
       - [ be32, 0x00EC2D90, 0x39200000 ]
       - [ be32, 0x00EC2D94, 0x4BFFFF9C ]
+  "Patras1993 Private Match - Infinite Time + 5 Wins / 9 Rounds":
+    Games:
+      "TEKKEN REVOLUTION":
+        NPUB31250: [ 01.05 ]
+    Author: "Patras1993 private match rules"
+    Patch Version: 1.1.0
+    Group: ""
+    Notes: "Private Player Match preset: infinite round time, first to 5 wins, up to 9 rounds with final round at 4:4."
+    Patch:
+      - [ be32, 0x0054B4E0, 0x38000001 ]
+      - [ be32, 0x0028BF48, 0x38000005 ]
+      - [ be32, 0x0028C024, 0x38000005 ]
+      - [ be32, 0x0028CA7C, 0x38000005 ]
+      - [ be32, 0x0028CAE4, 0x38000005 ]
+      - [ be32, 0x0028F0A8, 0x38000005 ]
+      - [ be32, 0x0028BF2C, 0x38000009 ]
+      - [ be32, 0x0028C008, 0x38000009 ]
+      - [ be32, 0x00293758, 0x38000009 ]
+      - [ be32, 0x0029B848, 0x38000009 ]
