@@ -13,7 +13,13 @@ Write-Host "Katalog: $repo"
 if (-not (Test-Path -LiteralPath $backend)) { throw "Brak: $backend" }
 if (-not (Test-Path -LiteralPath $rpcn)) { throw "Brak: $rpcn" }
 
-$rpcnVersionText = (& $rpcn --version 2>&1 | Out-String).Trim()
+Push-Location $rpcnDir
+try {
+    $rpcnVersionText = (& $rpcn --version 2>&1 | Out-String).Trim()
+}
+finally {
+    Pop-Location
+}
 if ($rpcnVersionText -notmatch '1\.10\.0') {
     throw "RPCN musi miec wersje 1.10.0 (protocol 32). Uruchom Host\\Setup Patras1993 Host.cmd jako administrator. Wykryto: $rpcnVersionText"
 }
@@ -47,7 +53,7 @@ if (-not (PortOpen 443)) {
 
 if (-not (PortOpen 31313)) {
     Write-Host 'RPCN: uruchamianie na TCP 31313...'
-    Start-Process -FilePath $rpcn -WorkingDirectory $rpcnDir -ArgumentList @() -WindowStyle Normal
+    Start-Process -FilePath $rpcn -WorkingDirectory $rpcnDir -WindowStyle Normal
 } else {
     Write-Host 'RPCN: TCP 31313 juz dziala.'
 }
