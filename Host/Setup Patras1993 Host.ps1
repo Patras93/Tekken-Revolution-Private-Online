@@ -1,7 +1,77 @@
 $ErrorActionPreference = 'Stop'
+
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $root
-$envFile = Join-Path $repoRoot 'local_backend\server_cert_thumbprint.txt'
+$backendDir = Join-Path $repoRoot 'local_backend'
+$rpcnDir = Join-Path $repoRoot 'local_rpcn'
+$rpcnExe = Join-Path $rpcnDir 'rpcn.exe'
+$envFile = Join-Path $backendDir 'server_cert_thumbprint.txt'
+
+$requiredRpcnVersion = '1.10.0'
+$rpcnZipUrl = 'https://github.com/RipleyTom/rpcn/releases/download/1.10.0/rpcn-win.zip'
+$rpcnZipSha256 = '439e4f08bd8485194b36fb33b6da86a21a97adda56c968c75872918cf64ea663'
+
+function Get-RpcnVersion {
+    param([string]$Exe)
+    if (-not (Test-Path -LiteralPath $Exe)) { return $null }
+    try {
+        $out = (& $Exe --version 2>&1 | Out-String).Trim()
+        if ($out -match 'RPCN\s+v?([0-9]+\.[0-9]+\.[0-9]+)') { return $Matches[1] }
+        if ($out -match '([0-9]+\.[0-9]+\.[0-9]+)') { return $Matches[1] }
+    } catch {}
+    return $null
+}
+
+function Install-Rpcn1100 {
+    Write-Host "RPCN: wymagane $requiredRpcnVersion (protocol 32)."
+    Write-Host 'RPCN: pobieranie oficjalnego rpcn-win.zip...'
+
+    $tmpRoot = Join-Path $env:TEMP ('Patras1993-RPCN-' + [guid]::NewGuid().ToString('N'))
+    $zip = Join-Path $tmpRoot 'rpcn-win.zip'
+    $unpack = Join-Path $tmpRoot 'unpack'
+    New-Item -ItemType Directory -Path $tmpRoot -Force | Out-Null
+    New-Item -ItemType Directory -Path $unpack -Force | Out-Null
+
+    try {
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        Invoke-WebRequest -Uri $rpcnZipUrl -OutFile $zip -UseBasicParsing
+
+        $hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($hash -ne $rpcnZipSha256) {
+            throw "Bledny SHA256 rpcn-win.zip: $hash"
+        }
+
+        Expand-Archive -LiteralPath $zip -DestinationPath $unpack -Force
+        $newExe = Get-ChildItem -LiteralPath $unpack -Filter 'rpcn.exe' -File -Recurse | Select-Object -First 1
+        if (-not $newExe) { throw 'Nie znaleziono rpcn.exe w oficjalnym archiwum RPCN 1.10.0.' }
+
+        New-Item -ItemType Directory -Path $rpcnDir -Force | Out-Null
+
+        if (Test-Path -LiteralPath $rpcnExe) {
+            $backup = Join-Path $rpcnDir 'rpcn.exe.before-1.10.0.bak'
+            Copy-Item -LiteralPath $rpcnExe -Destination $backup -Force
+        }
+
+        Copy-Item -LiteralPath $newExe.FullName -Destination $rpcnExe -Force
+    }
+    finally {
+        Remove-Item -LiteralPath $tmpRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    $installed = Get-RpcnVersion -Exe $rpcnExe
+    if ($installed -ne $requiredRpcnVersion) {
+        throw "RPCN po instalacji ma wersje '$installed', oczekiwano '$requiredRpcnVersion'."
+    }
+    Write-Host "RPCN: $installed OK (protocol 32)."
+}
+
+$currentRpcn = Get-RpcnVersion -Exe $rpcnExe
+if ($currentRpcn -ne $requiredRpcnVersion) {
+    Write-Host "RPCN: obecna wersja: $currentRpcn"
+    Install-Rpcn1100
+} else {
+    Write-Host "RPCN: $currentRpcn OK (protocol 32)."
+}
 
 $subject = 'CN=patch.tekkenbtb.online'
 $cert = Get-ChildItem 'Cert:\CurrentUser\My' | Where-Object {
@@ -16,10 +86,13 @@ $thumb = $cert.Thumbprint.ToUpperInvariant()
 [IO.File]::WriteAllText($envFile, $thumb, [Text.UTF8Encoding]::new($false))
 
 New-NetFirewallRule -DisplayName 'Patras1993 Tekken Revolution HTTPS' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 443 -Profile Any -ErrorAction SilentlyContinue | Out-Null
-New-NetFirewallRule -DisplayName 'Patras1993 RPCN' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 31313 -Profile Any -ErrorAction SilentlyContinue | Out-Null
+New-NetFirewallRule -DisplayName 'Patras1993 RPCN TCP' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 31313 -Profile Any -ErrorAction SilentlyContinue | Out-Null
+New-NetFirewallRule -DisplayName 'Patras1993 RPCN UDP' -Direction Inbound -Action Allow -Protocol UDP -LocalPort 3657 -Profile Any -ErrorAction SilentlyContinue | Out-Null
 
 Write-Host "Certyfikat: $thumb"
 Write-Host "Plik certyfikatu: $envFile"
-Write-Host 'Port 443: OK'
-Write-Host 'Port 31313: OK'
-Write-Host 'Nie jest instalowany ani uruchamiany BTB Launcher.'
+Write-Host 'TCP 443: OK'
+Write-Host 'TCP 31313: OK'
+Write-Host 'UDP 3657: OK'
+Write-Host 'BTB Launcher nie jest instalowany ani uruchamiany.'
+Write-Host 'PATRA1993 HOST SETUP GOTOWY.'
