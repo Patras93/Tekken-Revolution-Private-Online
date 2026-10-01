@@ -56,9 +56,10 @@ if (Test-Path -LiteralPath $outElf) {
 Write-Host 'Uruchamiam oficjalny decrypter RPCS3...'
 Write-Host ''
 
-$proc = Start-Process -FilePath $rpcs3Exe -ArgumentList @('--decrypt', $eboot) -Wait -PassThru
-if ($proc.ExitCode -ne 0) {
-    throw ('RPCS3 --decrypt zakonczyl sie kodem ' + $proc.ExitCode + '.')
+& $rpcs3Exe '--decrypt' $eboot
+$exitCode = $LASTEXITCODE
+if ($exitCode -ne 0) {
+    throw ('RPCS3 --decrypt zakonczyl sie kodem ' + $exitCode + '.')
 }
 
 if (-not (Test-Path -LiteralPath $outElf)) {
