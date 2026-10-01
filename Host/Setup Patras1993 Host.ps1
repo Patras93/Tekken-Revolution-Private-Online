@@ -157,6 +157,7 @@ Write-Host 'Hook instalacja: WYLACZONA do czasu potwierdzenia bezpiecznego loade
 $nativePatchSource = Join-Path $repoRoot 'local_patch\NPUB31250_patch.yml'
 $patchDir = Join-Path $rpcs3Dir 'patches'
 $nativePatchTarget = Join-Path $patchDir 'NPUB31250_patch.yml'
+$oldWrongPatchTarget = Join-Path $rpcs3Dir 'config\patches\NPUB31250_patch.yml'
 $patchConfigPath = Join-Path $rpcs3Dir 'config\patch_config.yml'
 $patchConfigBackup = Join-Path $rpcs3Dir 'config\patch_config.yml.patras1993.bak'
 $patchHashKey = 'PPU-1504b75ba97abccdf2d0a93dd93aaff10591a01e:'
@@ -164,6 +165,11 @@ $patchDescriptionLine = '  "Patras1993 Revolution Runtime Patches":'
 
 if (-not (Test-Path -LiteralPath $nativePatchSource)) {
     throw "Brak natywnego patcha Revolution: $nativePatchSource"
+}
+
+if (Test-Path -LiteralPath $oldWrongPatchTarget) {
+    Remove-Item -LiteralPath $oldWrongPatchTarget -Force
+    Write-Host "RPCS3 patch cleanup: usunieto stara bledna kopie -> $oldWrongPatchTarget"
 }
 
 New-Item -ItemType Directory -Path $patchDir -Force | Out-Null
