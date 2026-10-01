@@ -1,0 +1,41 @@
+name: Build current RPCN for Windows
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-rpcn:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Patras1993 repository
+        uses: actions/checkout@v4
+
+      - name: Checkout current RPCN
+        uses: actions/checkout@v4
+        with:
+          repository: RipleyTom/rpcn
+          path: rpcn-source
+          ref: master
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          toolchain: stable-x86_64-pc-windows-msvc
+
+      - name: Build RPCN
+        working-directory: rpcn-source
+        run: cargo build --release
+
+      - name: Package RPCN executable
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path rpcn-artifact | Out-Null
+          Copy-Item rpcn-source\target\release\rpcn.exe rpcn-artifact\rpcn.exe
+          Set-Content -Path rpcn-artifact\BUILD_SOURCE.txt -Value "RipleyTom/rpcn master"
+          Compress-Archive -Path rpcn-artifact\* -DestinationPath rpcn-current-win.zip -Force
+
+      - name: Upload RPCN artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: rpcn-current-win
+          path: rpcn-current-win.zip
