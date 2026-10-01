@@ -160,7 +160,37 @@ $hostsBackup = "$hostsPath.patras1993.bak"
 $currentHostLines = [IO.File]::ReadAllLines($hostsPath)
 $filteredHostLines = @(
     $currentHostLines |
-        Where-Object { $_ -notmatch '(?i)\s+(patch|rpcn)\.tekkenbtb\.online\s*
+        Where-Object { $_ -notmatch '(?i)\s+(patch|rpcn)\.tekkenbtb\.online\s*$' }
+)
+
+$desiredHostLines = @($filteredHostLines)
+$desiredHostLines += '127.0.0.1 patch.tekkenbtb.online'
+$desiredHostLines += '127.0.0.1 rpcn.tekkenbtb.online'
+
+$currentText = ($currentHostLines -join [Environment]::NewLine).TrimEnd()
+$desiredText = ($desiredHostLines -join [Environment]::NewLine).TrimEnd()
+
+if ($currentText -ne $desiredText) {
+    if (-not (Test-Path -LiteralPath $hostsBackup)) {
+        [IO.File]::Copy($hostsPath, $hostsBackup, $false)
+        Write-Host "HOSTS: kopia zapasowa -> $hostsBackup"
+    }
+
+    $tmpHosts = Join-Path $env:TEMP ('hosts.patras1993.' + [guid]::NewGuid().ToString('N'))
+    try {
+        [IO.File]::WriteAllLines($tmpHosts, $desiredHostLines, [Text.Encoding]::ASCII)
+        [IO.File]::Copy($tmpHosts, $hostsPath, $true)
+    }
+    finally {
+        Remove-Item -LiteralPath $tmpHosts -Force -ErrorAction SilentlyContinue
+    }
+
+    ipconfig /flushdns | Out-Null
+    Write-Host 'HOSTS: patch/rpcn.tekkenbtb.online -> 127.0.0.1'
+}
+else {
+    Write-Host 'HOSTS: wpisy Patras1993 juz sa poprawne.'
+}
 $subject = 'CN=patch.tekkenbtb.online'
 $cert = Get-ChildItem 'Cert:\CurrentUser\My' |
     Where-Object {
