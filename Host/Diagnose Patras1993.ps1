@@ -18,7 +18,7 @@ if (-not $rpcs3Dir -or -not (Test-Path -LiteralPath $rpcs3Dir)) {
     throw "Nieprawidlowa sciezka RPCS3 w host_config.json: $rpcs3Dir"
 }
 
-$patchFile = Join-Path $rpcs3Dir 'config\patches\NPUB31250_patch.yml'
+$patchFile = Join-Path $rpcs3Dir 'patches\NPUB31250_patch.yml'
 $patchConfig = Join-Path $rpcs3Dir 'config\patch_config.yml'
 $logCandidates = @(
     (Join-Path $rpcs3Dir 'RPCS3.log'),
