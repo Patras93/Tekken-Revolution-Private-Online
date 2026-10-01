@@ -7,6 +7,15 @@ $rpcn=Join-Path $rpcnDir 'rpcn.exe'
 if(-not (Test-Path $backend)){throw "Brak local_backend\server.ps1"}
 if(-not (Test-Path $rpcn)){throw "Brak local_rpcn\rpcn.exe"}
 
+$rpcnCert=Join-Path $rpcnDir 'cert.pem'
+if(-not (Test-Path $rpcnCert)){
+  Write-Host 'Brak cert.pem RPCN - generowanie certyfikatu...'
+  $p=Start-Process -FilePath $rpcn -WorkingDirectory $rpcnDir -ArgumentList '--cert-gen' -Wait -PassThru -NoNewWindow
+  if($p.ExitCode -ne 0 -or -not (Test-Path $rpcnCert)){
+    throw 'Nie udało się wygenerować cert.pem dla RPCN.'
+  }
+}
+
 function PortOpen([int]$p){
   try { return [bool](Get-NetTCPConnection -State Listen -LocalPort $p -ErrorAction Stop) } catch { return $false }
 }
