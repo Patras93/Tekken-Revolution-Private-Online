@@ -150,25 +150,48 @@ else {
 
 $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
 $hostLines = Get-Content -LiteralPath $hostsPath -ErrorAction Stop |
-    Where-Object { $_ -notmatch '(?i)\s+(patch|rpcn)\.tekkenbtb\.online\s*
-$cert = Get-ChildItem 'Cert:\CurrentUser\My' | Where-Object {
-    $_.Subject -eq $subject -and $_.HasPrivateKey -and $_.NotAfter -gt (Get-Date)
-} | Sort-Object NotAfter -Descending | Select-Object -First 1
+    Where-Object { $_ -notmatch '(?i)\s+(patch|rpcn)\.tekkenbtb\.online\s*$' }
+
+$hostLines += '127.0.0.1 patch.tekkenbtb.online'
+$hostLines += '127.0.0.1 rpcn.tekkenbtb.online'
+
+Set-Content -LiteralPath $hostsPath -Value $hostLines -Encoding ASCII
+ipconfig /flushdns | Out-Null
+Write-Host 'HOSTS: patch/rpcn.tekkenbtb.online -> 127.0.0.1'
+
+$subject = 'CN=patch.tekkenbtb.online'
+$cert = Get-ChildItem 'Cert:\CurrentUser\My' |
+    Where-Object {
+        $_.Subject -eq $subject -and
+        $_.HasPrivateKey -and
+        $_.NotAfter -gt (Get-Date)
+    } |
+    Sort-Object NotAfter -Descending |
+    Select-Object -First 1
 
 if (-not $cert) {
-    $cert = New-SelfSignedCertificate -DnsName 'patch.tekkenbtb.online' -CertStoreLocation 'Cert:\CurrentUser\My' -FriendlyName 'Patras1993 Tekken Revolution Backend' -NotAfter (Get-Date).AddYears(5)
+    $certParams = @{
+        DnsName = 'patch.tekkenbtb.online'
+        CertStoreLocation = 'Cert:\CurrentUser\My'
+        FriendlyName = 'Patras1993 Tekken Revolution Backend'
+        NotAfter = (Get-Date).AddYears(5)
+    }
+    $cert = New-SelfSignedCertificate @certParams
 }
 
 $thumb = $cert.Thumbprint.ToUpperInvariant()
-[IO.File]::WriteAllText($envFile, $thumb, [Text.UTF8Encoding]::new($false))
+[IO.File]::WriteAllText($envFile, $thumb, (New-Object System.Text.UTF8Encoding($false)))
 
-$trusted = Get-ChildItem 'Cert:\CurrentUser\Root' | Where-Object { $_.Thumbprint -eq $thumb } | Select-Object -First 1
+$trusted = Get-ChildItem 'Cert:\CurrentUser\Root' |
+    Where-Object { $_.Thumbprint -eq $thumb } |
+    Select-Object -First 1
+
 if (-not $trusted) {
     $tmpCert = Join-Path $env:TEMP 'patras1993-backend.cer'
     try {
         Export-Certificate -Cert $cert -FilePath $tmpCert -Force | Out-Null
         Import-Certificate -FilePath $tmpCert -CertStoreLocation 'Cert:\CurrentUser\Root' | Out-Null
-        Write-Host 'Certyfikat backendu: dodany do Zaufanych glownych urzedow biezacego uzytkownika.'
+        Write-Host 'Certyfikat backendu: dodany do zaufanych glownych urzedow biezacego uzytkownika.'
     }
     finally {
         Remove-Item -LiteralPath $tmpCert -Force -ErrorAction SilentlyContinue
