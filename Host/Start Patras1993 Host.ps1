@@ -7,11 +7,17 @@ $rpcn = Join-Path $rpcnDir 'rpcn.exe'
 $rpcnCert = Join-Path $rpcnDir 'cert.pem'
 $rpcnKey = Join-Path $rpcnDir 'key.pem'
 
-Write-Host '=== PATRA1993 HOST ==='
+Write-Host '=== PATRAS1993 HOST ==='
 Write-Host "Katalog: $repo"
 
 if (-not (Test-Path -LiteralPath $backend)) { throw "Brak: $backend" }
 if (-not (Test-Path -LiteralPath $rpcn)) { throw "Brak: $rpcn" }
+
+$rpcnVersionText = (& $rpcn --version 2>&1 | Out-String).Trim()
+if ($rpcnVersionText -notmatch '1\.10\.0') {
+    throw "RPCN musi miec wersje 1.10.0 (protocol 32). Uruchom Host\\Setup Patras1993 Host.cmd jako administrator. Wykryto: $rpcnVersionText"
+}
+Write-Host "RPCN wersja: $rpcnVersionText (protocol 32)"
 
 function PortOpen([int]$Port) {
     try {
