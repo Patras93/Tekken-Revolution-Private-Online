@@ -113,10 +113,19 @@ Wymagana para:
 
 Do przetestowania:
 - certyfikat HTTPS na hoście,
-- logowanie RPCN,
+- logowanie RPCN: POTWIERDZONE,
 - pobieranie danych Revolution,
 - wejście obu klientów do online,
 - pokój prywatny,
 - gra host/guest.
 
 Nie testujemy TK5DR, Tekken 6 ani Tag 2 w tym projekcie.
+
+
+========================================
+POTWIERDZONE 2026-10-01
+========================================
+
+RPCN 1.10.0 / protocol 32: POTWIERDZONE.
+RPCS3: konto RPCN prawidlowe na lokalnym serwerze Patras1993.
+TCP 31313 i UDP 3657: nasluchuja.
