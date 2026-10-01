@@ -57,9 +57,14 @@ E:\instalacje gier\rpcs3-v0.0.43-20146-4d88114c_win64
 4. Odczytaj adres Tailscale 100.x.x.x.
 5. Podaj go koleżance.
 
-Setup tworzy/wybiera lokalny certyfikat backendu i otwiera:
-- TCP 443
-- TCP 31313
+Setup:
+- pilnuje RPCN 1.10.0 (protocol 32),
+- w razie potrzeby pobiera oficjalny rpcn-win.zip 1.10.0,
+- zachowuje lokalna konfiguracje i certyfikaty RPCN,
+- tworzy/wybiera lokalny certyfikat backendu,
+- otwiera TCP 443,
+- otwiera TCP 31313,
+- otwiera UDP 3657.
 
 ========================================
 GUEST
@@ -100,6 +105,11 @@ Gotowe:
 - Guest zapisujący konfigurację,
 - Guest start bez ręcznego wpisywania ścieżki RPCS3,
 - Tailscale jako transport host <-> guest.
+
+Wymagana para:
+- RPCS3 0.0.43-20147-dfc0542a,
+- RPCN 1.10.0,
+- RPCN protocol 32.
 
 Do przetestowania:
 - certyfikat HTTPS na hoście,
