@@ -155,7 +155,7 @@ else {
 Write-Host 'Hook instalacja: WYLACZONA do czasu potwierdzenia bezpiecznego loadera.'
 
 $nativePatchSource = Join-Path $repoRoot 'local_patch\NPUB31250_patch.yml'
-$patchDir = Join-Path $rpcs3Dir 'config\patches'
+$patchDir = Join-Path $rpcs3Dir 'patches'
 $nativePatchTarget = Join-Path $patchDir 'NPUB31250_patch.yml'
 $patchConfigPath = Join-Path $rpcs3Dir 'config\patch_config.yml'
 $patchConfigBackup = Join-Path $rpcs3Dir 'config\patch_config.yml.patras1993.bak'
