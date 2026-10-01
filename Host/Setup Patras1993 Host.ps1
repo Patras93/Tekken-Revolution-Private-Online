@@ -39,6 +39,14 @@ function Install-Rpcn1100 {
 
         New-Item -ItemType Directory -Path $rpcnDir -Force | Out-Null
 
+        $runningRpcn = Get-CimInstance Win32_Process -Filter "Name='rpcn.exe'" -ErrorAction SilentlyContinue | Where-Object {
+            $_.ExecutablePath -and ([IO.Path]::GetFullPath($_.ExecutablePath) -eq [IO.Path]::GetFullPath($rpcnExe))
+        }
+        foreach ($proc in $runningRpcn) {
+            Write-Host "RPCN: zatrzymywanie starej instancji PID $($proc.ProcessId)..."
+            Stop-Process -Id $proc.ProcessId -Force -ErrorAction Stop
+        }
+
         if (Test-Path -LiteralPath $rpcnExe) {
             $backup = Join-Path $rpcnDir 'rpcn.exe.before-1.10.0.bak'
             Copy-Item -LiteralPath $rpcnExe -Destination $backup -Force
