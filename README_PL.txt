@@ -1,93 +1,112 @@
-TEKKEN REVOLUTION PRIVATE ONLINE v1.2.0
+TEKKEN REVOLUTION PRIVATE ONLINE - PATRAS1993 v2.0
 
 ========================================
-CO JEST W PACZCE
+CEL
 ========================================
 
-Paczka zawiera tylko nasze pliki serwera i narzedzia.
-Nie zawiera RPCS3 ani plikow gry Tekken Revolution.
+Prywatny serwer Tekken Revolution NPUB31250.
+BTB nie jest uruchamiany jako serwer ani launcher.
+BTB pozostaje wyłącznie wzorcem kompatybilności.
 
-Zawartosc:
-- local_backend - backend prywatnego online
-- local_rpcn - lokalny RPCN
-- modules - nasze moduly
-- patches - nasze patche
-- Guest - konfiguracja dla osoby dolaczajacej
-- skrypty Host
-- README_PL.txt
+Host:
+- własny RPCN,
+- własny backend,
+- Tailscale,
+- lokalne patche/moduły.
+
+Guest:
+- własny RPCS3,
+- własna kopia Tekken Revolution NPUB31250,
+- Tailscale,
+- połączenie bezpośrednio do hosta.
 
 ========================================
-HOST - TWOJ KOMPUTER
+WAŻNE
 ========================================
 
-1. Zainstaluj i uruchom Tailscale.
+Nie usuwamy ani nie modyfikujemy instalacji BTB.
+Nie jest potrzebny BTB Launcher.
+
+Gra nadal używa nazw endpointów wymaganych przez obecny moduł
+kompatybilności:
+- patch.tekkenbtb.online
+- rpcn.tekkenbtb.online
+
+Guest wpisuje te nazwy lokalnie do hosts i kieruje je na adres
+Tailscale hosta. Oznacza to, że ruch idzie do naszego komputera,
+a nie do serwera BTB.
+
+To jest etap niezależności infrastruktury. Później możemy usunąć
+same nazwy BTB dopiero po potwierdzeniu, że moduł gry pozwala na
+zmianę endpointów.
+
+========================================
+HOST
+========================================
+
+Repo najlepiej umieścić wewnątrz:
+
+E:\instalacje gier\rpcs3-v0.0.43-20146-4d88114c_win64
+
+1. Zainstaluj Tailscale.
 2. Uruchom:
-   Setup Online Host.cmd
+   Host\Setup Patras1993 Host.cmd
    jako administrator.
 3. Uruchom:
-   Start Tekken Revolution Online Host.cmd
-4. Odczytaj swoj adres Tailscale 100.x.x.x.
-5. Podaj ten adres kolezance.
+   Host\Start Patras1993 Host.cmd
+4. Odczytaj adres Tailscale 100.x.x.x.
+5. Podaj go koleżance.
 
-Host uruchamia backend i RPCN.
-Nie trzeba przenosic RPCS3 do folderu serwera.
+Setup tworzy/wybiera lokalny certyfikat backendu i otwiera:
+- TCP 443
+- TCP 31313
 
 ========================================
-GUEST - KOMPUTER KOLEZANKI
+GUEST
 ========================================
 
-Kolezanka potrzebuje:
-- wlasnej instalacji RPCS3,
-- wlasnej kopii Tekken Revolution NPUB31250,
-- Tailscale,
-- folderu Guest z tej paczki.
-
-1. Dolacz do tej samej sieci Tailscale co host.
+1. Obie osoby muszą być w tej samej sieci Tailscale.
 2. Uruchom:
    Guest\Setup Online Guest.cmd
    jako administrator.
-3. Podaj adres Tailscale hosta, np. 100.x.x.x.
-4. Skrypt AUTOMATYCZNIE SZUKA RPCS3.
-   Nie trzeba podawac sciezki do rpcs3.exe.
-5. Skrypt sprawdza obecność Tekken Revolution NPUB31250.
-6. Po konfiguracji uruchom:
+3. Podaj adres Tailscale hosta.
+4. Skrypt wykryje RPCS3 i zapisze jego ścieżkę.
+5. Uruchom:
    Guest\Start Online Guest.cmd
 
-Guest nie uruchamia lokalnego backendu ani lokalnego RPCN.
-Laczy sie z hostem przez Tailscale.
-
 ========================================
-WYMAGANIA
+RPCS3
 ========================================
 
-- Windows
-- RPCS3
-- Tekken Revolution NPUB31250
-- Tailscale
-- uprawnienia administratora podczas konfiguracji
+Docelowa instalacja użytkownika:
 
-RPCS3 i Tekken Revolution NIE sa czescia tego repozytorium.
+E:\instalacje gier\rpcs3-v0.0.43-20146-4d88114c_win64
 
-========================================
-SCIEZKI
-========================================
+Repo nie zawiera RPCS3 ani plików gry.
 
-RPCS3 moze znajdowac sie w dowolnym miejscu.
-Paczka serwera moze znajdowac sie w dowolnym miejscu.
-Nie sa wymagane stale sciezki typu E:\tr\... .
+Gra:
+dev_hdd0\game\NPUB31250
 
 ========================================
-AKTUALIZACJE
+STATUS v2.0
 ========================================
 
-Aktualizacje serwera, patchy i narzedzi sa dostarczane przez repozytorium.
-Nie trzeba kopiowac calego katalogu USRDIR do paczki serwera.
+Gotowe:
+- lokalny RPCN,
+- lokalny backend,
+- backend dostępny na interfejsach sieciowych,
+- Host setup,
+- Host start,
+- Guest zapisujący konfigurację,
+- Guest start bez ręcznego wpisywania ścieżki RPCS3,
+- Tailscale jako transport host <-> guest.
 
-========================================
-TRYB ONLINE
-========================================
+Do przetestowania:
+- certyfikat HTTPS na hoście,
+- logowanie RPCN,
+- pobieranie danych Revolution,
+- wejście obu klientów do online,
+- pokój prywatny,
+- gra host/guest.
 
-Host = backend + RPCN + Tailscale.
-Guest = RPCS3 + Tekken Revolution + Tailscale.
-
-Docelowo system obsluguje prywatna gre online oraz nasz tryb Practice online.
+Nie testujemy TK5DR, Tekken 6 ani Tag 2 w tym projekcie.
