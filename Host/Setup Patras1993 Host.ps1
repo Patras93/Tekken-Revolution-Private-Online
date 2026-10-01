@@ -5,31 +5,15 @@ $repoRoot = Split-Path -Parent $root
 $backendDir = Join-Path $repoRoot 'local_backend'
 $rpcnDir = Join-Path $repoRoot 'local_rpcn'
 $rpcnExe = Join-Path $rpcnDir 'rpcn.exe'
+$rpcnVersionFile = Join-Path $rpcnDir 'rpcn_version.txt'
 $envFile = Join-Path $backendDir 'server_cert_thumbprint.txt'
 
 $requiredRpcnVersion = '1.10.0'
 $rpcnZipUrl = 'https://github.com/RipleyTom/rpcn/releases/download/1.10.0/rpcn-win.zip'
 $rpcnZipSha256 = '439e4f08bd8485194b36fb33b6da86a21a97adda56c968c75872918cf64ea663'
 
-function Get-RpcnVersion {
-    param([string]$Exe)
-    if (-not (Test-Path -LiteralPath $Exe)) { return $null }
-    try {
-        Push-Location (Split-Path -Parent $Exe)
-        try {
-            $out = (& $Exe --version 2>&1 | Out-String).Trim()
-        }
-        finally {
-            Pop-Location
-        }
-        if ($out -match 'RPCN\s+v?([0-9]+\.[0-9]+\.[0-9]+)') { return $Matches[1] }
-        if ($out -match '([0-9]+\.[0-9]+\.[0-9]+)') { return $Matches[1] }
-    } catch {}
-    return $null
-}
-
 function Install-Rpcn1100 {
-    Write-Host "RPCN: wymagane $requiredRpcnVersion (protocol 32)."
+    Write-Host "RPCN: instalacja wersji $requiredRpcnVersion (protocol 32)."
     Write-Host 'RPCN: pobieranie oficjalnego rpcn-win.zip...'
 
     $tmpRoot = Join-Path $env:TEMP ('Patras1993-RPCN-' + [guid]::NewGuid().ToString('N'))
@@ -49,7 +33,9 @@ function Install-Rpcn1100 {
 
         Expand-Archive -LiteralPath $zip -DestinationPath $unpack -Force
         $newExe = Get-ChildItem -LiteralPath $unpack -Filter 'rpcn.exe' -File -Recurse | Select-Object -First 1
-        if (-not $newExe) { throw 'Nie znaleziono rpcn.exe w oficjalnym archiwum RPCN 1.10.0.' }
+        if (-not $newExe) {
+            throw 'Nie znaleziono rpcn.exe w oficjalnym archiwum RPCN 1.10.0.'
+        }
 
         New-Item -ItemType Directory -Path $rpcnDir -Force | Out-Null
 
@@ -59,23 +45,32 @@ function Install-Rpcn1100 {
         }
 
         Copy-Item -LiteralPath $newExe.FullName -Destination $rpcnExe -Force
+        [IO.File]::WriteAllText($rpcnVersionFile, $requiredRpcnVersion, [Text.UTF8Encoding]::new($false))
     }
     finally {
         Remove-Item -LiteralPath $tmpRoot -Recurse -Force -ErrorAction SilentlyContinue
     }
 
-    $installed = Get-RpcnVersion -Exe $rpcnExe
-    if ($installed -ne $requiredRpcnVersion) {
-        throw "RPCN po instalacji ma wersje '$installed', oczekiwano '$requiredRpcnVersion'."
+    if (-not (Test-Path -LiteralPath $rpcnExe)) {
+        throw 'Brak rpcn.exe po instalacji.'
     }
-    Write-Host "RPCN: $installed OK (protocol 32)."
+    if ((Get-Content -LiteralPath $rpcnVersionFile -Raw).Trim() -ne $requiredRpcnVersion) {
+        throw 'Nie udalo sie zapisac informacji o wersji RPCN.'
+    }
+
+    Write-Host "RPCN: $requiredRpcnVersion gotowy (protocol 32)."
 }
 
-$currentRpcn = Get-RpcnVersion -Exe $rpcnExe
-if ($currentRpcn -ne $requiredRpcnVersion) {
-    Write-Host "RPCN: obecna wersja: $currentRpcn"
+$currentRpcn = $null
+if (Test-Path -LiteralPath $rpcnVersionFile) {
+    $currentRpcn = (Get-Content -LiteralPath $rpcnVersionFile -Raw).Trim()
+}
+
+if (-not (Test-Path -LiteralPath $rpcnExe) -or $currentRpcn -ne $requiredRpcnVersion) {
+    Write-Host "RPCN: zapis wersji: $currentRpcn"
     Install-Rpcn1100
-} else {
+}
+else {
     Write-Host "RPCN: $currentRpcn OK (protocol 32)."
 }
 
@@ -101,4 +96,4 @@ Write-Host 'TCP 443: OK'
 Write-Host 'TCP 31313: OK'
 Write-Host 'UDP 3657: OK'
 Write-Host 'BTB Launcher nie jest instalowany ani uruchamiany.'
-Write-Host 'PATRA1993 HOST SETUP GOTOWY.'
+Write-Host 'PATRAS1993 HOST SETUP GOTOWY.'
