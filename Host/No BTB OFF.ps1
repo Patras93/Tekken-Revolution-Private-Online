@@ -14,14 +14,12 @@ if (-not (Test-Path -LiteralPath $configPath)) { throw 'Brak host_config.json.' 
 
 $cfg = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
 $rpcs3 = [string]$cfg.rpcs3_directory
-$gameRoot = Join-Path $rpcs3 'dev_hdd0\game\NPUB31250'
+$rpcnPath = Join-Path $rpcs3 'config\rpcn.yml'
+$rpcnBackup = "$rpcnPath.patras1993.no-btb.bak"
 
-$restored = 0
-Get-ChildItem -LiteralPath $gameRoot -Filter '*.patras1993-no-btb.bak' -File -Recurse -ErrorAction SilentlyContinue | ForEach-Object {
-    $original = $_.FullName.Substring(0, $_.FullName.Length - '.patras1993-no-btb.bak'.Length)
-    [IO.File]::Copy($_.FullName, $original, $true)
-    Write-Host "RESTORED: $original"
-    $restored++
+if (Test-Path -LiteralPath $rpcnBackup) {
+    [IO.File]::Copy($rpcnBackup, $rpcnPath, $true)
+    Write-Host 'rpcn.yml: przywrocony.'
 }
 
 $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
@@ -29,12 +27,12 @@ $hostsBackup = "$hostsPath.patras1993.no-btb.bak"
 if (Test-Path -LiteralPath $hostsBackup) {
     [IO.File]::Copy($hostsBackup, $hostsPath, $true)
     ipconfig /flushdns | Out-Null
+    Write-Host 'HOSTS: przywrocony.'
 }
 
 Remove-Item -LiteralPath (Join-Path $hostDir 'no_btb_config.json') -Force -ErrorAction SilentlyContinue
 
 Write-Host ''
 Write-Host '=== NO-BTB HOST: OFF ==='
-Write-Host "Przywrocone pliki gry: $restored"
-Write-Host 'Przywrocono HOSTS sprzed eksperymentu.'
-Write-Host 'Dla pelnego powrotu uruchom ponownie Setup Patras1993 Host.cmd jako administrator.'
+Write-Host 'Pliki gry nie wymagaly przywracania.'
+Write-Host 'Dla pelnego powrotu do v2.1.1 uruchom Setup Patras1993 Host.cmd jako administrator.'
