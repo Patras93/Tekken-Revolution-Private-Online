@@ -1,5 +1,5 @@
 name: Build Stable Packages
-# stable-source: v2.1.0-final
+# stable-source: v2.1.1-hotfix
 
 on:
   push:
@@ -13,25 +13,25 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
-      - name: Checkout stable v2.1.0
+      - name: Checkout stable v2.1.1
         uses: actions/checkout@v4
         with:
-          ref: stable-v2.1.0
+          ref: stable-v2.1.1
 
-      - name: Build v2.1.0 ZIP packages
+      - name: Build v2.1.1 ZIP packages
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
 
-          $guestStage = 'package-guest\Patras1993-Tekken-Revolution-Guest-v2.1.0'
-          $hostStage = 'package-host\Patras1993-Tekken-Revolution-Host-v2.1.0'
+          $guestStage = 'package-guest\Patras1993-Tekken-Revolution-Guest-v2.1.1'
+          $hostStage = 'package-host\Patras1993-Tekken-Revolution-Host-v2.1.1'
 
           New-Item -ItemType Directory -Path $guestStage -Force | Out-Null
           New-Item -ItemType Directory -Path $hostStage -Force | Out-Null
 
           Copy-Item 'Guest\*' $guestStage -Recurse -Force
           Copy-Item 'VERSION.txt' $guestStage -Force
-          Copy-Item 'RELEASE_NOTES_v2.1.0.txt' $guestStage -Force
+          Copy-Item 'RELEASE_NOTES_v2.1.1.txt' $guestStage -Force
 
           Copy-Item 'Host' $hostStage -Recurse -Force
           Copy-Item 'local_backend' $hostStage -Recurse -Force
@@ -39,10 +39,10 @@ jobs:
           Copy-Item 'local_rpcn' $hostStage -Recurse -Force
           Copy-Item 'README_PL.txt' $hostStage -Force
           Copy-Item 'VERSION.txt' $hostStage -Force
-          Copy-Item 'RELEASE_NOTES_v2.1.0.txt' $hostStage -Force
+          Copy-Item 'RELEASE_NOTES_v2.1.1.txt' $hostStage -Force
 
-          $guestZip = 'Patras1993-Tekken-Revolution-Guest-v2.1.0.zip'
-          $hostZip = 'Patras1993-Tekken-Revolution-Host-v2.1.0.zip'
+          $guestZip = 'Patras1993-Tekken-Revolution-Guest-v2.1.1.zip'
+          $hostZip = 'Patras1993-Tekken-Revolution-Host-v2.1.1.zip'
 
           if (Test-Path $guestZip) { Remove-Item $guestZip -Force }
           if (Test-Path $hostZip) { Remove-Item $hostZip -Force }
@@ -63,18 +63,18 @@ jobs:
             throw 'Host ZIP zawiera przestarzale pliki testowe.'
           }
 
-      - name: Upload Guest v2.1.0
+      - name: Upload Guest v2.1.1
         uses: actions/upload-artifact@v4
         with:
-          name: Patras1993-Tekken-Revolution-Guest-v2.1.0
-          path: Patras1993-Tekken-Revolution-Guest-v2.1.0.zip
+          name: Patras1993-Tekken-Revolution-Guest-v2.1.1
+          path: Patras1993-Tekken-Revolution-Guest-v2.1.1.zip
           if-no-files-found: error
           retention-days: 30
 
-      - name: Upload Host v2.1.0
+      - name: Upload Host v2.1.1
         uses: actions/upload-artifact@v4
         with:
-          name: Patras1993-Tekken-Revolution-Host-v2.1.0
-          path: Patras1993-Tekken-Revolution-Host-v2.1.0.zip
+          name: Patras1993-Tekken-Revolution-Host-v2.1.1
+          path: Patras1993-Tekken-Revolution-Host-v2.1.1.zip
           if-no-files-found: error
           retention-days: 30
