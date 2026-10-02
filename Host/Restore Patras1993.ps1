@@ -42,7 +42,7 @@ New-Item -ItemType Directory -Path $stage -Force | Out-Null
 try {
     Expand-Archive -LiteralPath $BackupZip -DestinationPath $stage -Force
 
-    foreach ($name in @('local_backend','local_rpcn','local_patch')) {
+    foreach ($name in @('local_rpcn','local_patch')) {
         $src = Join-Path $stage $name
         if (Test-Path -LiteralPath $src) {
             $dst = Join-Path $repoRoot $name
@@ -54,28 +54,6 @@ try {
     $srcHostConfig = Join-Path $stage 'Host\host_config.json'
     if (Test-Path -LiteralPath $srcHostConfig) {
         Copy-Item -LiteralPath $srcHostConfig -Destination (Join-Path $hostDir 'host_config.json') -Force
-    }
-
-    # Przywracanie certyfikatu backendu i aktualizacja thumbprintu.
-    $pfx = Join-Path $stage 'backend-cert.pfx'
-    $passFile = Join-Path $stage 'backend-cert-password.txt'
-    if ((Test-Path -LiteralPath $pfx) -and (Test-Path -LiteralPath $passFile)) {
-        $password = (Get-Content -LiteralPath $passFile -Raw)
-        $secure = ConvertTo-SecureString -String $password -AsPlainText -Force
-        $imported = Import-PfxCertificate -FilePath $pfx -CertStoreLocation 'Cert:\CurrentUser\My' -Password $secure -Exportable
-        if ($imported) {
-            $thumb = $imported.Thumbprint.ToUpperInvariant()
-            [IO.File]::WriteAllText((Join-Path $repoRoot 'local_backend\server_cert_thumbprint.txt'), $thumb, [Text.UTF8Encoding]::new($false))
-
-            $tmpCert = Join-Path $env:TEMP 'patras1993-restore.cer'
-            try {
-                Export-Certificate -Cert $imported -FilePath $tmpCert -Force | Out-Null
-                Import-Certificate -FilePath $tmpCert -CertStoreLocation 'Cert:\CurrentUser\Root' | Out-Null
-            }
-            finally {
-                Remove-Item -LiteralPath $tmpCert -Force -ErrorAction SilentlyContinue
-            }
-        }
     }
 
     # RPCS3_STATE jest przywracany do sciezki zapisanej w host_config.json.
