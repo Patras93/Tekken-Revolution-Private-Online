@@ -18,6 +18,20 @@ $rpcnErrLog = Join-Path $logDir 'rpcn.err.log'
 Write-Host '=== PATRAS1993 HOST ==='
 Write-Host "Katalog: $repo"
 
+$tailscaleCmd = Get-Command tailscale.exe -ErrorAction SilentlyContinue
+if ($tailscaleCmd) {
+    $tailscaleIp = (& $tailscaleCmd.Source ip -4 2>$null | Select-Object -First 1)
+    if ($tailscaleIp) {
+        Write-Host "Tailscale IPv4: $tailscaleIp"
+    }
+    else {
+        Write-Host 'Tailscale IPv4: BRAK - sprawdz logowanie/polaczenie Tailscale.'
+    }
+}
+else {
+    Write-Host 'Tailscale: nie znaleziono tailscale.exe.'
+}
+
 if (-not (Test-Path -LiteralPath $backend)) { throw "Brak: $backend" }
 if (-not (Test-Path -LiteralPath $rpcn)) { throw "Brak: $rpcn" }
 if (-not (Test-Path -LiteralPath $rpcnVersionFile)) {
