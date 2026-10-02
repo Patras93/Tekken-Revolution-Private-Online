@@ -86,6 +86,23 @@ function UdpPortOpen([int]$Port) {
 Result 'RPCS3 EXE' (Test-Path -LiteralPath $rpcs3Exe) $rpcs3Exe
 if (-not (Test-Path -LiteralPath $rpcs3Exe)) { exit 2 }
 
+$startedForVersionCheck = $false
+$runningRpcs3 = Get-Process rpcs3 -ErrorAction SilentlyContinue | Select-Object -First 1
+if (-not $runningRpcs3) {
+    Write-Host 'RPCS3 nie jest uruchomiony. Uruchamiam emulator tylko do odczytu wersji...'
+    Start-Process -FilePath $rpcs3Exe -WorkingDirectory $rpcs3Dir | Out-Null
+    $startedForVersionCheck = $true
+
+    $deadline = (Get-Date).AddSeconds(20)
+    do {
+        Start-Sleep -Milliseconds 500
+        $runningRpcs3 = Get-Process rpcs3 -ErrorAction SilentlyContinue | Select-Object -First 1
+        if ($runningRpcs3) {
+            try { $runningRpcs3.Refresh() } catch {}
+        }
+    } while ((Get-Date) -lt $deadline -and (-not $runningRpcs3 -or [string]::IsNullOrWhiteSpace($runningRpcs3.MainWindowTitle)))
+}
+
 $evidence = Get-Rpcs3VersionEvidence -Exe $rpcs3Exe -Dir $rpcs3Dir
 $versionOk = $evidence -match '0\.0\.43-20161|\b20161\b'
 $versionDetail = ''
@@ -95,7 +112,11 @@ if ($versionOk) {
     else { $versionDetail = '20161 wykryty' }
 }
 else {
-    $versionDetail = 'nie wykryto numeru; uruchom RPCS3 raz, zamknij i powtorz test'
+    $title = ''
+    $p = Get-Process rpcs3 -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($p) { try { $p.Refresh(); $title = [string]$p.MainWindowTitle } catch {} }
+    if ($title) { $versionDetail = "tytul okna: $title" }
+    else { $versionDetail = 'nie wykryto numeru wersji' }
 }
 Result 'RPCS3 20161' $versionOk $versionDetail
 
@@ -162,6 +183,6 @@ if ($localOk) {
 
 Write-Host 'LOKALNY TEST 20161: NIEPRZEJSCIONY.'
 if (-not $versionOk) {
-    Write-Host 'Wersja nie zostala rozpoznana. Uruchom RPCS3 20161 jeden raz, zamknij emulator i powtorz test.'
+    Write-Host 'Wersja nie zostala rozpoznana. Sprawdz tytul okna RPCS3 pokazany wyzej.'
 }
 exit 2
