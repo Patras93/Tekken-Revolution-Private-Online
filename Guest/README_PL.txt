@@ -1,5 +1,5 @@
 TEKKEN REVOLUTION PRIVATE ONLINE - GUEST
-v1.2.0
+v1.2.1
 
 ========================================
 CO MUSISZ MIEC
@@ -44,10 +44,24 @@ Skrypt automatycznie:
 - przygotuje konfiguracje.
 
 ========================================
-KROK 3 - URUCHOMIENIE
+KROK 3 - KONTO RPCN PATRAS1993
 ========================================
 
-Po pomyslnej konfiguracji uruchom:
+Konto na oficjalnym RPCN nie jest automatycznie kontem na prywatnym serwerze Patras1993.
+
+Jesli laczysz sie z Patras1993 pierwszy raz:
+1. Uruchom RPCS3 po wykonaniu Setup Online Guest.cmd.
+2. W ustawieniach RPCN wybierz serwer Patras1993.
+3. Utworz osobne konto RPCN na tym serwerze.
+4. Zaloguj sie na utworzone konto.
+
+Serwer Patras1993 nie wymaga potwierdzania adresu e-mail.
+
+========================================
+KROK 4 - URUCHOMIENIE
+========================================
+
+Po skonfigurowaniu i zalogowaniu konta uruchom:
 
 Start Online Guest.cmd
 
