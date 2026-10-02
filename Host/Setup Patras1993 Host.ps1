@@ -97,23 +97,43 @@ $candidates = @(
     (Join-Path $env:LOCALAPPDATA 'Programs\RPCS3\rpcs3.exe')
 ) | Where-Object { $_ }
 
-$rpcs3Exe = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
-if (-not $rpcs3Exe) {
-    Write-Host 'RPCS3: nie znaleziono w typowych lokalizacjach. Przeszukuje dyski lokalne...'
-    foreach ($drive in (Get-PSDrive -PSProvider FileSystem | Select-Object -ExpandProperty Root)) {
-        $found = Get-ChildItem -LiteralPath $drive -Filter 'rpcs3.exe' -File -Recurse -Force -ErrorAction SilentlyContinue |
-            Where-Object { $_.FullName -notmatch '\\(Windows|ProgramData)\\' } |
-            Select-Object -First 1
-        if ($found) { $rpcs3Exe = $found.FullName; break }
+$rpcs3Exe = $null
+
+# Wybierz tylko instalacje RPCS3, ktore faktycznie zawieraja Tekken Revolution NPUB31250.
+foreach ($candidate in $candidates) {
+    if (-not (Test-Path -LiteralPath $candidate)) { continue }
+    $candidateDir = Split-Path -Parent $candidate
+    $candidateGame = Join-Path $candidateDir 'dev_hdd0\game\NPUB31250\USRDIR\EBOOT.BIN'
+    if (Test-Path -LiteralPath $candidateGame) {
+        $rpcs3Exe = $candidate
+        break
     }
 }
-if (-not $rpcs3Exe) { throw 'Nie znaleziono rpcs3.exe.' }
+
+if (-not $rpcs3Exe) {
+    Write-Host 'RPCS3 z Tekken Revolution: nie znaleziono w typowych lokalizacjach. Przeszukuje dyski lokalne...'
+    foreach ($drive in (Get-PSDrive -PSProvider FileSystem | Select-Object -ExpandProperty Root)) {
+        $foundList = Get-ChildItem -LiteralPath $drive -Filter 'rpcs3.exe' -File -Recurse -Force -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -notmatch '(?i)\\(Windows|ProgramData|\$Recycle\.Bin|System Volume Information)\\' }
+
+        foreach ($found in $foundList) {
+            $candidateDir = Split-Path -Parent $found.FullName
+            $candidateGame = Join-Path $candidateDir 'dev_hdd0\game\NPUB31250\USRDIR\EBOOT.BIN'
+            if (Test-Path -LiteralPath $candidateGame) {
+                $rpcs3Exe = $found.FullName
+                break
+            }
+        }
+        if ($rpcs3Exe) { break }
+    }
+}
+
+if (-not $rpcs3Exe) {
+    throw 'Nie znaleziono instalacji RPCS3 zawierajacej Tekken Revolution NPUB31250.'
+}
 
 $rpcs3Dir = Split-Path -Parent $rpcs3Exe
 $gameEboot = Join-Path $rpcs3Dir 'dev_hdd0\game\NPUB31250\USRDIR\EBOOT.BIN'
-if (-not (Test-Path -LiteralPath $gameEboot)) {
-    throw "Znaleziono RPCS3, ale nie znaleziono Tekken Revolution NPUB31250: $gameEboot"
-}
 
 @{
     rpcs3_directory = $rpcs3Dir
