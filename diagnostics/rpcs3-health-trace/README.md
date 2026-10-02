@@ -1,28 +1,31 @@
-# Patras1993 RPCS3 Candidate Trace
+# Patras1993 RPCS3 Health Trace
 
-Diagnostic-only experiment for Tekken Revolution NPUB31250 01.05.
+Diagnostic-only build for Tekken Revolution NPUB31250 01.05.
 
-## Important
+Confirmed from mirrored raw P1/P2 captures:
 
-The old addresses below are **NOT confirmed current-health fields**:
+- P1 current HP copy A: guest `0x012D9F60`
+- P1 current HP copy B: guest `0x012D9F64`
+- P1 max HP: guest `0x012D9F6C`
+- P1 health percent: guest `0x012D9F76`
+- P2 current HP copy A: guest `0x012DC400`
+- P2 current HP copy B: guest `0x012DC404`
+- P2 max HP: guest `0x012DC40C`
+- P2 health percent: guest `0x012DC416`
 
-- P1 candidate: guest `0x012D9F74`
-- P2 counterpart: guest `0x012DC414`
+The four captured states were internally consistent:
+- full health = 160 and percent = 100,
+- 11 HP -> 6 percent,
+- 136 HP -> 85 percent,
+- 127 HP -> 79 percent,
+- 21 HP -> 13 percent.
 
-A stronger cross-check showed that this region belongs to the player/position block and the original
-`100 -> 15` observation is not sufficient to identify HP. Do not use these addresses for an
-Infinite Health patch.
+The diagnostic RPCS3 logs every PPU Interpreter write overlapping either current-HP pair:
 
-The workflow is manual-only until `Host/Find Revolution P1 Health.ps1` v2 identifies a field that:
-
-1. decreases only when P1 is damaged,
-2. resets at the next round,
-3. has the mirrored P2 offset,
-4. decreases only when P2 is damaged.
-
-After the real current-health addresses are confirmed, retarget the tracer and use the logged PPU
-`cia` to find the exact native damage instruction.
+`PATRAS1993_HP_WRITE cia=0x........ addr=0x........ size=...`
 
 Pinned upstream:
 - RPCS3 0.0.43-20147-dfc0542a
 - commit dfc0542a9fbf9a23b0b8aa526ff0e8430127719f
+
+Use PPU Interpreter while tracing. The final gameplay patch must target the game instruction, not freeze guest RAM.
