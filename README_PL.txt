@@ -1,4 +1,4 @@
-TEKKEN REVOLUTION PRIVATE ONLINE - PATRAS1993 v2.1
+TEKKEN REVOLUTION PRIVATE ONLINE - PATRAS1993 v2.1.0 STABLE
 
 ========================================
 CEL
@@ -120,7 +120,7 @@ Gra:
 dev_hdd0\game\NPUB31250
 
 ========================================
-STATUS v2.1
+STATUS v2.1.0 STABLE
 ========================================
 
 Gotowe:
@@ -138,13 +138,14 @@ Wymagana para:
 - RPCN 1.10.0,
 - RPCN protocol 32.
 
-Do przetestowania:
-- certyfikat HTTPS na hoście,
-- logowanie RPCN: POTWIERDZONE,
-- pobieranie danych Revolution,
-- wejście obu klientów do online,
-- pokój prywatny,
-- gra host/guest.
+Potwierdzone end-to-end 2026-10-02:
+- certyfikat/backend HTTPS dziala w zestawie host/guest,
+- logowanie do prywatnego RPCN dziala,
+- pobieranie danych Revolution dziala,
+- obaj klienci wchodza do online,
+- pokoj prywatny dziala,
+- gra host/guest dziala,
+- Private Match dziala w realnym tescie z kolezanka.
 
 Nie testujemy TK5DR, Tekken 6 ani Tag 2 w tym projekcie.
 
