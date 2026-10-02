@@ -1,246 +1,143 @@
-TEKKEN REVOLUTION PRIVATE ONLINE - PATRAS1993 v2.2.0 EXPERIMENTAL NO-BTB
+TEKKEN REVOLUTION PRIVATE ONLINE - PATRAS1993 v2.2.0 RPCN DIRECT
 
 ========================================
-CEL
+ARCHITEKTURA v2.2.0
 ========================================
 
-Prywatny serwer Tekken Revolution NPUB31250.
-BTB nie jest uruchamiany jako serwer ani launcher.
-BTB pozostaje wyłącznie wzorcem kompatybilności.
+Tekken Revolution NPUB31250 dziala bez infrastruktury TekkenBTB.
 
 Host:
-- własny RPCN,
-- własny backend,
+- prywatny RPCN 1.10.0 / protocol 32,
 - Tailscale,
-- lokalne patche/moduły.
+- natywny patch RPCS3,
+- brak backendu HTTPS,
+- brak launchera/hooka BTB,
+- brak domen BTB w Windows HOSTS.
 
 Guest:
-- własny RPCS3,
-- własna kopia Tekken Revolution NPUB31250,
+- RPCS3,
+- Tekken Revolution NPUB31250 01.05,
 - Tailscale,
-- połączenie bezpośrednio do hosta.
+- bezposrednie polaczenie RPCN do adresu Tailscale hosta,
+- natywny patch RPCS3.
 
-========================================
-WAŻNE
-========================================
-
-Nie usuwamy ani nie modyfikujemy instalacji BTB.
-Nie jest potrzebny BTB Launcher.
-
-Gra nadal używa nazw endpointów wymaganych przez obecny moduł
-kompatybilności:
-- patch.tekkenbtb.online
-- rpcn.tekkenbtb.online
-
-Guest wpisuje te nazwy lokalnie do hosts i kieruje je na adres
-Tailscale hosta. Oznacza to, że ruch idzie do naszego komputera,
-a nie do serwera BTB.
-
-To jest etap niezależności infrastruktury. Później możemy usunąć
-same nazwy BTB dopiero po potwierdzeniu, że moduł gry pozwala na
-zmianę endpointów.
+Backend TCP 443 nie jest wymagany.
 
 ========================================
 HOST
 ========================================
 
-Repo najlepiej umieścić wewnątrz:
-
-E:\instalacje gier\rpcs3-v0.0.43-20146-4d88114c_win64
-
-1. Zainstaluj Tailscale.
-2. Uruchom:
+1. Zainstaluj i polacz Tailscale.
+2. Uruchom jako administrator:
    Host\Setup Patras1993 Host.cmd
-   jako administrator.
 3. Uruchom:
    Host\Start Patras1993 Host.cmd
-4. Odczytaj adres Tailscale 100.x.x.x.
-5. Podaj go koleżance.
+4. Podaj kolezance adres Tailscale 100.x.x.x.
 
 Setup:
-- pilnuje RPCN 1.10.0 (protocol 32),
-- w razie potrzeby pobiera oficjalny rpcn-win.zip 1.10.0,
-- zachowuje lokalna konfiguracje i certyfikaty RPCN,
-- tworzy/wybiera lokalny certyfikat backendu,
-- otwiera TCP 443,
-- otwiera TCP 31313,
-- otwiera UDP 3657,
-- ignoruje Kosz i katalogi systemowe przy wykrywaniu RPCS3,
-- wybiera tylko instalacje RPCS3 zawierajaca NPUB31250.
-
-Aktualny zestaw Host:
-- Setup Patras1993 Host.cmd/.ps1,
-- Start Patras1993 Host.cmd/.ps1,
-- Start Patras1993 Host Silent.cmd,
-- Stop Patras1993 Host.cmd/.ps1,
-- Diagnose Patras1993.cmd/.ps1,
-- Private Match ON.cmd,
-- Private Match OFF.cmd,
-- Set Private Match Rules.ps1.
-
-Usuniete jako przestarzale:
-- osobne Practice Online Health ON/OFF,
-- osobne P1 Health Shield ON/OFF,
-- skaner P1 Health,
-- narzedzia testowe Decrypt Revolution EBOOT.
+- sprawdza RZECZYWISTA wersje rpcn.exe,
+- wymaga RPCN 1.10.0 / protocol 32,
+- automatycznie naprawia stary RPCN,
+- instaluje natywny patch NPUB31250,
+- ustawia RPCN hosta na 127.0.0.1,
+- usuwa historyczne aliasy BTB z Windows HOSTS,
+- otwiera TCP 31313 i UDP 3657,
+- nie uruchamia ani nie instaluje backendu HTTPS.
 
 ========================================
 GUEST
 ========================================
 
-1. Obie osoby muszą być w tej samej sieci Tailscale.
-2. Uruchom:
+1. Dolacz do tej samej sieci Tailscale.
+2. Uruchom jako administrator:
    Guest\Setup Online Guest.cmd
-   jako administrator.
 3. Podaj adres Tailscale hosta.
-4. Skrypt wykryje RPCS3 i zapisze jego ścieżkę.
-5. Przed uruchomieniem gry zamknij RPCS3 i wlacz:
+4. Przy pierwszym polaczeniu utworz konto RPCN na prywatnym serwerze Patras1993.
+5. Zamknij RPCS3 i uruchom:
    Guest\Private Match ON.cmd
 6. Uruchom:
    Guest\Start Online Guest.cmd
 
-Private Match jest wspolnym presetem dla obu graczy:
+Guest laczy RPCN bezposrednio do:
+100.x.x.x:31313
+
+Nie potrzebuje zadnych domen BTB ani backendu 443.
+
+========================================
+PRIVATE MATCH
+========================================
+
+Preset:
 - HP obu graczy nie spada,
 - czas rundy jest nieskonczony,
-- wygrana meczu wymaga 5 rund,
+- pierwszego do 5 wygranych rund,
 - maksymalnie 9 rund,
 - Final Round przy 4:4.
 
 ========================================
-RPCS3
+ZWERYFIKOWANE WERSJE
 ========================================
 
-Docelowa instalacja użytkownika:
-
-E:\instalacje gier\rpcs3-v0.0.43-20146-4d88114c_win64
-
-Repo nie zawiera RPCS3 ani plików gry.
-
-Gra:
-dev_hdd0\game\NPUB31250
-
-========================================
-STATUS v2.1.1 STABLE HOTFIX
-========================================
-
-Gotowe:
-- lokalny RPCN,
-- lokalny backend,
-- backend dostępny na interfejsach sieciowych,
-- Host setup,
-- Host start,
-- Guest zapisujący konfigurację,
-- Guest start bez ręcznego wpisywania ścieżki RPCS3,
-- Tailscale jako transport host <-> guest.
-
-Preferowana para:
-- RPCS3 0.0.43-20161-96ccd89c,
-- RPCN 1.10.0,
-- RPCN protocol 32.
-
-Awaryjny fallback RPCS3:
-- 0.0.43-20147-dfc0542a.
-
-Potwierdzone end-to-end 2026-10-02:
-- certyfikat/backend HTTPS dziala w zestawie host/guest,
-- logowanie do prywatnego RPCN dziala,
-- pobieranie danych Revolution dziala,
-- obaj klienci wchodza do online,
-- pokoj prywatny dziala,
-- gra host/guest dziala,
-- Private Match dziala w realnym tescie z kolezanka.
-
-Nie testujemy TK5DR, Tekken 6 ani Tag 2 w tym projekcie.
-
-
-========================================
-POTWIERDZONE 2026-10-01
-========================================
-
-RPCN 1.10.0 / protocol 32: POTWIERDZONE.
-RPCS3: konto RPCN prawidlowe na lokalnym serwerze Patras1993.
-TCP 31313 i UDP 3657: nasluchuja.
-
-
-========================================
-AKTUALIZACJA 2026-10-02
-========================================
-
-Host zostal uproszczony do jednego presetu Private Match.
-Stare osobne przelaczniki zdrowia zostaly usuniete.
-Host Start pokazuje adres Tailscale IPv4.
-Host Diagnose sprawdza Tailscale, nasluch RPCN TCP 31313 i regule Windows Firewall.
-Eksperymentalny P1 Health Shield zostal usuniety z patcha.
-
-
-========================================
-BACKUP STANU SERWERA
-========================================
-
-Stabilna galaz stable-v2.1.1 i paczki v2.1.1 zachowuja kod oraz konfiguracje bazowa.
-Nie sa kopia zywej bazy kont utworzonych pozniej na prywatnym RPCN.
-
-Aby zachowac aktualny stan hosta, uruchom:
-
-Host\Backup Patras1993.cmd
-
-Skrypt zatrzymuje hosta i tworzy:
-Backups\Patras1993-Full-Backup-RRRRMMDD-GGMMSS.zip
-
-Backup zawiera:
-- caly local_rpcn, w tym runtimeowa baze kont RPCN i klucze,
-- local_backend i local_patch,
-- host_config.json,
-- wazne ustawienia RPCS3,
-- dev_hdd0\home,
-- certyfikat backendu z kluczem prywatnym,
-- informacje o aktualnym Tailscale.
-
-Backup NIE zawiera calej gry ani calego RPCS3.
-
-Aby odtworzyc ostatni backup:
-Host\Restore Patras1993.cmd
-
-Po Restore uruchom Setup Patras1993 Host.cmd jako administrator,
-a potem Start Patras1993 Host.cmd.
-
-Folder Backups i prywatne runtimeowe pliki RPCN sa ignorowane przez Git,
-zeby baza kont i klucze nie trafily przypadkiem do repozytorium.
-
-
-========================================
-RPCS3 20161 - POTWIERDZONE 2026-10-02
-========================================
-
-Preferowany i sprawdzony build:
-RPCS3 0.0.43-20161-96ccd89c
+RPCS3 preferowany:
+0.0.43-20161-96ccd89c
 
 Pelny commit RPCS3:
 96ccd89cd6931c32e66ef5c5e4f823e210c24c15
 
-Potwierdzone:
-- Tekken Revolution NPUB31250: PASS,
-- Private Match: PASS,
-- backend HTTPS TCP 443: PASS,
-- RPCN TCP 31313: PASS,
-- RPCN UDP 3657: PASS,
-- Tailscale: PASS,
-- dzialajacy zestaw po aktualizacji RPCS3: PASS.
+RPCS3 fallback:
+0.0.43-20147-dfc0542a
 
-RPCS3 0.0.43-20147-dfc0542a pozostaje awaryjnym fallbackiem.
+RPCN:
+1.10.0
+protocol 32
 
-Guest\Update RPCS3 for Patras1993.cmd pobiera dokladnie zweryfikowany
-build 20161-96ccd89c i sprawdza SHA256 przed instalacja.
+Tekken Revolution:
+NPUB31250
+01.05
 
 ========================================
-HOTFIX v2.1.1
+POTWIERDZONE 2026-10-02
 ========================================
 
-- naprawiony uszkodzony local_backend\server.ps1,
-- backend ponownie nasluchuje na 0.0.0.0:443,
-- Host Start pokazuje szczegoly bledu backendu, jesli port 443 nie wystartuje,
-- dodany pelny Backup/Restore stanu prywatnego serwera,
-- naprawiona kolizja zmiennej PowerShell $HOME w Backup,
-- dodany tester RPCS3 20161 przyjazny dla NVDA,
-- Guest rozpoznaje dokladny zweryfikowany build 20161,
-- updater Guest jest przypiety do oficjalnego archiwum 20161-96ccd89c.
+- prywatny RPCN dziala,
+- konto Patras1993 uwierzytelnia sie na prywatnym RPCN,
+- Tekken Revolution wchodzi do online,
+- Private Match dziala,
+- Tailscale host/guest dziala,
+- po usunieciu domen BTB z HOSTS gra nadal dziala,
+- backend HTTPS 443 nie jest potrzebny do polaczenia online.
+
+Wykryty i naprawiony blad:
+rpcn_version.txt wskazywal 1.10.0, ale faktyczny rpcn.exe byl 1.8.7.
+Od v2.2.0 Setup i Start sprawdzaja rzeczywista wersje rpcn.exe.
+
+========================================
+BACKUP
+========================================
+
+Host\Backup Patras1993.cmd
+
+Backup zawiera:
+- Host,
+- local_rpcn wraz z prywatna baza kont i kluczami,
+- local_patch,
+- wazne ustawienia RPCS3,
+- dev_hdd0\home,
+- informacje Tailscale.
+
+Nie zawiera:
+- calej gry,
+- calego RPCS3,
+- backendu HTTPS, bo v2.2.0 go nie uzywa.
+
+Backup jest prywatny: zawiera baze kont RPCN i klucze.
+
+Restore:
+Host\Restore Patras1993.cmd
+
+========================================
+DOSTEPNOSC
+========================================
+
+Skrypty sa tekstowe, klawiaturowe i przygotowane pod NVDA.
+Komunikaty podaja stan RPCN, Tailscale i patcha bez potrzeby odczytu elementow graficznych.
