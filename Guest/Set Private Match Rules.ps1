@@ -91,6 +91,7 @@ else {
 Write-Host ''
 if ($Mode -eq 'On') {
     Write-Host 'PRIVATE MATCH RULES: ON'
+    Write-Host 'HP obu graczy: nie spada'
     Write-Host 'Czas rundy: nieskonczony'
     Write-Host 'Wygrana meczu: 5 rund'
     Write-Host 'Maksymalnie: 9 rund'
