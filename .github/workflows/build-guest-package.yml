@@ -63,10 +63,10 @@ jobs:
             throw 'Host stable zawiera pozostalosci starej architektury.'
           }
 
-          if ($hostEntries -notmatch 'local_rpcn/rpcn.exe') {
+          if ($hostEntries -notmatch 'local_rpcn[\\/]rpcn\.exe') {
             throw 'Host stable nie zawiera rpcn.exe.'
           }
-          if ($hostEntries -notmatch 'local_rpcn/rpcn_version.txt') {
+          if ($hostEntries -notmatch 'local_rpcn[\\/]rpcn_version\.txt') {
             throw 'Host stable nie zawiera rpcn_version.txt.'
           }
 
