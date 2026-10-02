@@ -1,80 +1,83 @@
-name: Build Stable Packages
-# stable-source: v2.1.1-hotfix-final
+name: Build v2.2.0 RC Packages
+# source: v2.2.0-no-btb / RPCN Direct
 
 on:
   push:
     branches:
-      - patras1993-independent-server
+      - v2.2.0-no-btb
     paths:
       - ".github/workflows/build-guest-package.yml"
+      - "Host/**"
+      - "Guest/**"
+      - "local_rpcn/**"
+      - "local_patch/**"
+      - "VERSION.txt"
+      - "README_PL.txt"
+      - "RELEASE_NOTES_v2.2.0.txt"
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
     steps:
-      - name: Checkout stable v2.1.1
+      - name: Checkout v2.2.0 RC
         uses: actions/checkout@v4
         with:
-          ref: stable-v2.1.1
+          ref: v2.2.0-no-btb
 
-      - name: Build v2.1.1 ZIP packages
+      - name: Build v2.2.0 RC ZIP packages
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
 
-          $guestStage = 'package-guest\Patras1993-Tekken-Revolution-Guest-v2.1.1'
-          $hostStage = 'package-host\Patras1993-Tekken-Revolution-Host-v2.1.1'
+          $guestStage = 'package-guest\Patras1993-Tekken-Revolution-Guest-v2.2.0-rc'
+          $hostStage = 'package-host\Patras1993-Tekken-Revolution-Host-v2.2.0-rc'
 
           New-Item -ItemType Directory -Path $guestStage -Force | Out-Null
           New-Item -ItemType Directory -Path $hostStage -Force | Out-Null
 
           Copy-Item 'Guest\*' $guestStage -Recurse -Force
           Copy-Item 'VERSION.txt' $guestStage -Force
-          Copy-Item 'RELEASE_NOTES_v2.1.1.txt' $guestStage -Force
+          Copy-Item 'RELEASE_NOTES_v2.2.0.txt' $guestStage -Force
 
           Copy-Item 'Host' $hostStage -Recurse -Force
-          Copy-Item 'local_backend' $hostStage -Recurse -Force
           Copy-Item 'local_patch' $hostStage -Recurse -Force
           Copy-Item 'local_rpcn' $hostStage -Recurse -Force
           Copy-Item 'README_PL.txt' $hostStage -Force
           Copy-Item 'VERSION.txt' $hostStage -Force
-          Copy-Item 'RELEASE_NOTES_v2.1.1.txt' $hostStage -Force
+          Copy-Item 'RELEASE_NOTES_v2.2.0.txt' $hostStage -Force
 
-          $guestZip = 'Patras1993-Tekken-Revolution-Guest-v2.1.1.zip'
-          $hostZip = 'Patras1993-Tekken-Revolution-Host-v2.1.1.zip'
+          $guestZip = 'Patras1993-Tekken-Revolution-Guest-v2.2.0-rc.zip'
+          $hostZip = 'Patras1993-Tekken-Revolution-Host-v2.2.0-rc.zip'
 
-          if (Test-Path $guestZip) { Remove-Item $guestZip -Force }
-          if (Test-Path $hostZip) { Remove-Item $hostZip -Force }
-
-          Compress-Archive -Path 'package-guest\*' -DestinationPath $guestZip -CompressionLevel Optimal
-          Compress-Archive -Path 'package-host\*' -DestinationPath $hostZip -CompressionLevel Optimal
-
-          Write-Host "Guest ZIP: $((Get-Item $guestZip).Length) bytes"
-          Write-Host "Host ZIP: $((Get-Item $hostZip).Length) bytes"
+          Compress-Archive -Path 'package-guest\*' -DestinationPath $guestZip -CompressionLevel Optimal -Force
+          Compress-Archive -Path 'package-host\*' -DestinationPath $hostZip -CompressionLevel Optimal -Force
 
           $guestEntries = tar -tf $guestZip
           $hostEntries = tar -tf $hostZip
 
-          if ($guestEntries -match 'P1 Health Shield|Practice Online Health') {
-            throw 'Guest ZIP zawiera przestarzale pliki Health.'
+          if ($guestEntries -match 'No BTB|tekkenbtb|local_backend|version\.dll|tr_updater') {
+            throw 'Guest RC zawiera pozostalosci starej architektury.'
           }
-          if ($hostEntries -match 'P1 Health Shield|Practice Online Health|Find Revolution P1 Health|Decrypt Revolution EBOOT') {
-            throw 'Host ZIP zawiera przestarzale pliki testowe.'
+          if ($hostEntries -match 'No BTB|local_backend|version\.dll|tr_updater|modules/tr') {
+            throw 'Host RC zawiera pozostalosci starej architektury.'
           }
 
-      - name: Upload Guest v2.1.1
+          Write-Host "Guest ZIP: $((Get-Item $guestZip).Length) bytes"
+          Write-Host "Host ZIP: $((Get-Item $hostZip).Length) bytes"
+
+      - name: Upload Guest v2.2.0 RC
         uses: actions/upload-artifact@v4
         with:
-          name: Patras1993-Tekken-Revolution-Guest-v2.1.1
-          path: Patras1993-Tekken-Revolution-Guest-v2.1.1.zip
+          name: Patras1993-Tekken-Revolution-Guest-v2.2.0-rc
+          path: Patras1993-Tekken-Revolution-Guest-v2.2.0-rc.zip
           if-no-files-found: error
           retention-days: 30
 
-      - name: Upload Host v2.1.1
+      - name: Upload Host v2.2.0 RC
         uses: actions/upload-artifact@v4
         with:
-          name: Patras1993-Tekken-Revolution-Host-v2.1.1
-          path: Patras1993-Tekken-Revolution-Host-v2.1.1.zip
+          name: Patras1993-Tekken-Revolution-Host-v2.2.0-rc
+          path: Patras1993-Tekken-Revolution-Host-v2.2.0-rc.zip
           if-no-files-found: error
           retention-days: 30
