@@ -56,8 +56,12 @@ if (Test-Path -LiteralPath $outElf) {
 Write-Host 'Uruchamiam oficjalny decrypter RPCS3...'
 Write-Host ''
 
-& $rpcs3Exe '--decrypt' $eboot
-$exitCode = $LASTEXITCODE
+# Windows PowerShell uruchamia aplikacje GUI asynchronicznie przez operator &, przez co
+# $LASTEXITCODE moze pozostac pusty. Start-Process -Wait -PassThru daje prawdziwy kod wyjscia.
+$escapedEboot = $eboot.Replace('"', '\"')
+$argLine = '--decrypt "' + $escapedEboot + '"'
+$proc = Start-Process -FilePath $rpcs3Exe -ArgumentList $argLine -WorkingDirectory $rpcs3Dir -Wait -PassThru
+$exitCode = $proc.ExitCode
 if ($exitCode -ne 0) {
     throw ('RPCS3 --decrypt zakonczyl sie kodem ' + $exitCode + '.')
 }
