@@ -30,6 +30,33 @@ $logCandidates = @(
 Write-Host "RPCS3: $rpcs3Dir"
 Write-Host ''
 
+Write-Host '=== SIEC / TAILSCALE / RPCN ==='
+$tailscaleCmd = Get-Command tailscale.exe -ErrorAction SilentlyContinue
+if ($tailscaleCmd) {
+    $tailscaleIp = (& $tailscaleCmd.Source ip -4 2>$null | Select-Object -First 1)
+    if ($tailscaleIp) { Write-Host "Tailscale IPv4: $tailscaleIp" }
+    else { Write-Host 'Tailscale IPv4: BRAK' }
+}
+else {
+    Write-Host 'Tailscale: nie znaleziono tailscale.exe.'
+}
+
+$rpcnListen = $false
+try {
+    $rpcnListen = [bool](Get-NetTCPConnection -LocalPort 31313 -State Listen -ErrorAction Stop)
+}
+catch {}
+Write-Host ("RPCN TCP 31313 nasluch: " + ($(if($rpcnListen){'OK'}else{'BRAK'})))
+
+$fw = Get-NetFirewallRule -DisplayName 'Patras1993 RPCN TCP' -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($fw) {
+    Write-Host ("Firewall RPCN TCP: " + $fw.Enabled + ', ' + $fw.Direction + ', ' + $fw.Action)
+}
+else {
+    Write-Host 'Firewall RPCN TCP: BRAK REGULY'
+}
+Write-Host ''
+
 if (Test-Path -LiteralPath $patchFile) {
     $patchText = Get-Content -LiteralPath $patchFile -Raw
     $count = ([regex]::Matches($patchText, '\[ be32,')).Count
