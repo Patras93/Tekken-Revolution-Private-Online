@@ -229,3 +229,25 @@ Tester sprawdza:
 
 Dopiero po realnym tescie online host/guest 20161 moze zastapic 20147
 jako wersje bazowa. Do tego czasu stable-v2.1.0 nie jest zmieniany.
+
+
+========================================
+RPCS3 20161 - TEST LOKALNY 2026-10-02
+========================================
+
+Dokladny build:
+RPCS3 0.0.43-20161-96ccd89c
+
+Wynik lokalny:
+- RPCS3 20161: PASS,
+- Tekken Revolution NPUB31250: PASS,
+- patch NPUB31250: PASS,
+- Private Match: PASS,
+- backend HTTPS TCP 443: PASS,
+- RPCN TCP 31313: PASS,
+- RPCN UDP 3657: PASS,
+- Tailscale: PASS.
+
+Nastepny etap:
+realny test online Host 20161 <-> Guest.
+Do czasu tego testu stable-v2.1.0 pozostaje na sprawdzonym RPCS3 20147.
