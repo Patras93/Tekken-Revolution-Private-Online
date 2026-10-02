@@ -263,4 +263,10 @@ Write-Host "RPCS3: $expectedBuild"
 Write-Host 'Tekken Revolution: NPUB31250 01.05'
 Write-Host 'Patch: Patras1993 Revolution Runtime Patches'
 Write-Host "RPCN: $hostIp"
-Write-Host 'Do gry uzyj Guest\Start Online Guest.cmd'
+Write-Host ''
+Write-Host 'WAŻNE - KONTO RPCN PATRAS1993:'
+Write-Host 'Konto na oficjalnym RPCN nie tworzy automatycznie konta na prywatnym serwerze Patras1993.'
+Write-Host 'Jesli pierwszy raz laczysz sie z Patras1993, uruchom RPCS3 i utworz osobne konto RPCN na serwerze Patras1993.'
+Write-Host 'Po utworzeniu konta i poprawnym zalogowaniu uruchamiaj gre przez Guest\Start Online Guest.cmd.'
+Write-Host ''
+Read-Host 'Nacisnij ENTER po przeczytaniu tej informacji'
