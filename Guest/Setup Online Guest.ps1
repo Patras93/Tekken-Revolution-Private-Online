@@ -256,7 +256,7 @@ else {
 
 New-Item -ItemType Directory -Path (Split-Path -Parent $patchConfigPath) -Force | Out-Null
 [IO.File]::WriteAllLines($patchConfigPath, $configList, (New-Object System.Text.UTF8Encoding($false)))
-Write-Host 'Patch Revolution: ENABLED (453 wpisy).'
+Write-Host 'Patch Revolution: ENABLED.'
 
 $rpcnPath = Join-Path $rpcs3 'config\rpcn.yml'
 $rpcnBackup = Join-Path $rpcs3 'config\rpcn.yml.patras1993.guest.bak'
@@ -308,32 +308,21 @@ Write-Host 'RPCN: istniejacy NPID/Password/Token pozostawione bez zmian.'
 $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
 $hostsBackup = "$hostsPath.patras1993.guest.bak"
 $currentHostLines = [IO.File]::ReadAllLines($hostsPath)
-$filteredHostLines = @(
+$cleanHostLines = @(
     $currentHostLines |
-        Where-Object { $_ -notmatch '(?i)\s+(patch|rpcn)\.tekkenbtb\.online\s*$' }
+        Where-Object {
+            $_ -notmatch '(?i)\s+(patch|rpcn)\.tekkenbtb\.online\s*$' -and
+            $_ -notmatch '(?i)\s+(patch|rpcn)\.patras93\.invalid\s*$'
+        }
 )
-$desiredHostLines = @($filteredHostLines)
-$desiredHostLines += "$hostIp patch.tekkenbtb.online"
-$desiredHostLines += "$hostIp rpcn.tekkenbtb.online"
 
-$currentText = ($currentHostLines -join [Environment]::NewLine).TrimEnd()
-$desiredText = ($desiredHostLines -join [Environment]::NewLine).TrimEnd()
-
-if ($currentText -ne $desiredText) {
+if (($currentHostLines -join [Environment]::NewLine) -ne ($cleanHostLines -join [Environment]::NewLine)) {
     if (-not (Test-Path -LiteralPath $hostsBackup)) {
         [IO.File]::Copy($hostsPath, $hostsBackup, $false)
     }
-
-    $tmpHosts = Join-Path $env:TEMP ('hosts.patras1993.guest.' + [guid]::NewGuid().ToString('N'))
-    try {
-        [IO.File]::WriteAllLines($tmpHosts, $desiredHostLines, [Text.Encoding]::ASCII)
-        [IO.File]::Copy($tmpHosts, $hostsPath, $true)
-    }
-    finally {
-        Remove-Item -LiteralPath $tmpHosts -Force -ErrorAction SilentlyContinue
-    }
-
+    [IO.File]::WriteAllLines($hostsPath, $cleanHostLines, [Text.Encoding]::ASCII)
     ipconfig /flushdns | Out-Null
+    Write-Host 'HOSTS: usunieto historyczne aliasy BTB; zadne nowe aliasy nie sa potrzebne.'
 }
 
 $configPath = Join-Path $PSScriptRoot 'guest_config.json'
@@ -345,7 +334,7 @@ $configPath = Join-Path $PSScriptRoot 'guest_config.json'
 } | ConvertTo-Json | Set-Content -LiteralPath $configPath -Encoding UTF8
 
 Write-Host ''
-Write-Host 'GUEST GOTOWY.'
+Write-Host 'GUEST v2.2.0 GOTOWY.'
 Write-Host "RPCS3: $detectedBuild"
 Write-Host 'Tekken Revolution: NPUB31250 01.05'
 Write-Host 'Patch: Patras1993 Revolution Runtime Patches'
