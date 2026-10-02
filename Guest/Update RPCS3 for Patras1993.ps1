@@ -1,11 +1,14 @@
 $ErrorActionPreference = 'Stop'
 
 Write-Host ''
-Write-Host 'PATRAS1993 - RPCS3 GUEST UPDATER'
-Write-Host 'Docelowy build: RPCS3 0.0.43-20147-dfc0542a'
+Write-Host 'PATRAS1993 - RPCS3 GUEST VERSION HELPER'
+Write-Host 'Stable fallback: RPCS3 0.0.43-20147-dfc0542a'
+Write-Host 'Test candidate: RPCS3 0.0.43-20161'
 Write-Host ''
 
-$expectedBuild = '0.0.43-20147-dfc0542a'
+$stableBuild = '0.0.43-20147-dfc0542a'
+$candidateBuild = '0.0.43-20161'
+$expectedBuild = $stableBuild
 $archiveUrl = 'https://github.com/RPCS3/rpcs3-binaries-win/releases/download/build-dfc0542a9fbf9a23b0b8aa526ff0e8430127719f/rpcs3-v0.0.43-20147-dfc0542a_win64_msvc.7z'
 $archiveSha256 = '94d1c1cb3109cfc9288d7c85ef4277e7cad62b3db514f3e075713f7056f13196'
 
@@ -68,6 +71,17 @@ $game = Join-Path $rpcs3Dir 'dev_hdd0\game\NPUB31250\USRDIR\EBOOT.BIN'
 Write-Host "RPCS3: $rpcs3Dir"
 Write-Host 'Gra NPUB31250: OK'
 
+$versionInfo = (Get-Item -LiteralPath $rpcs3Exe).VersionInfo
+$combinedVersion = "$($versionInfo.FileVersion) $($versionInfo.ProductVersion)"
+if ($combinedVersion -like '*20161*') {
+    [IO.File]::WriteAllText((Join-Path $rpcs3Dir 'patras1993_rpc3_build.txt'), $candidateBuild, (New-Object System.Text.UTF8Encoding($false)))
+    Write-Host ''
+    Write-Host 'RPCS3 0.0.43-20161 jest juz zainstalowany.'
+    Write-Host 'Status: TEST CANDIDATE. Nie cofam automatycznie do 20147.'
+    Write-Host 'Jesli test nie przejdzie, uzyj kopii rpcs3_old albo tego helpera po usunieciu/zmianie aktualnej wersji.'
+    exit 0
+}
+
 $running = Get-Process rpcs3 -ErrorAction SilentlyContinue
 if ($running) {
     Write-Host 'Zamykanie RPCS3 przed aktualizacja...'
@@ -82,7 +96,7 @@ New-Item -ItemType Directory -Path $extract -Force | Out-Null
 
 try {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    Write-Host 'Pobieranie oficjalnego RPCS3 20147-dfc0542a...'
+    Write-Host 'Przywracanie stabilnego RPCS3 20147-dfc0542a...'
     Invoke-WebRequest -Uri $archiveUrl -OutFile $archive -UseBasicParsing
 
     $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -126,7 +140,7 @@ try {
     }
 
     Write-Host ''
-    Write-Host 'RPCS3 0.0.43-20147-dfc0542a GOTOWY.'
+    Write-Host 'RPCS3 0.0.43-20147-dfc0542a STABLE FALLBACK GOTOWY.'
     Write-Host 'Tekken Revolution i dane dev_hdd0 pozostaly na miejscu.'
 }
 finally {
