@@ -4,7 +4,9 @@ Write-Host ''
 Write-Host 'PATRAS1993 - TEKKEN REVOLUTION ONLINE GUEST'
 Write-Host ''
 
-$expectedBuild = '0.0.43-20147-dfc0542a'
+$stableBuild = '0.0.43-20147-dfc0542a'
+$candidateBuild = '0.0.43-20161'
+$acceptedBuilds = @($stableBuild, $candidateBuild)
 $nativePatchSource = Join-Path $PSScriptRoot 'Patras1993_NPUB31250_patch.yml'
 
 $hostIp = Read-Host 'Podaj adres Tailscale hosta Patras1993 (100.x.x.x)'
@@ -72,40 +74,57 @@ Write-Host "RPCS3: $rpcs3"
 Write-Host 'Tekken Revolution NPUB31250: OK'
 
 $buildOk = $false
+$detectedBuild = $null
 $buildMarker = Join-Path $rpcs3 'patras1993_rpc3_build.txt'
 
-if (Test-Path -LiteralPath $buildMarker) {
-    $markerValue = (Get-Content -LiteralPath $buildMarker -Raw).Trim()
-    if ($markerValue -eq $expectedBuild) {
-        $buildOk = $true
-    }
+# Najpierw wykryj aktualny build z VersionInfo, potem z logu i markera.
+$versionInfo = (Get-Item -LiteralPath $rpcs3Exe).VersionInfo
+$combinedVersion = "$($versionInfo.FileVersion) $($versionInfo.ProductVersion)"
+
+if ($combinedVersion -like '*20161*') {
+    $detectedBuild = $candidateBuild
+    $buildOk = $true
+}
+elseif ($combinedVersion -like '*20147*' -and $combinedVersion -like '*dfc0542a*') {
+    $detectedBuild = $stableBuild
+    $buildOk = $true
 }
 
 if (-not $buildOk) {
     $logPath = Join-Path $rpcs3 'RPCS3.log'
     if (Test-Path -LiteralPath $logPath) {
         $firstLine = Get-Content -LiteralPath $logPath -TotalCount 1
-        if ($firstLine -like "*$expectedBuild*") {
+        if ($firstLine -like '*20161*') {
+            $detectedBuild = $candidateBuild
             $buildOk = $true
-            [IO.File]::WriteAllText($buildMarker, $expectedBuild, (New-Object System.Text.UTF8Encoding($false)))
+        }
+        elseif ($firstLine -like '*20147*' -and $firstLine -like '*dfc0542a*') {
+            $detectedBuild = $stableBuild
+            $buildOk = $true
         }
     }
 }
 
-if (-not $buildOk) {
-    $versionInfo = (Get-Item -LiteralPath $rpcs3Exe).VersionInfo
-    $combinedVersion = "$($versionInfo.FileVersion) $($versionInfo.ProductVersion)"
-    if ($combinedVersion -like '*20147*' -and $combinedVersion -like '*dfc0542a*') {
+if (-not $buildOk -and (Test-Path -LiteralPath $buildMarker)) {
+    $markerValue = (Get-Content -LiteralPath $buildMarker -Raw).Trim()
+    if ($acceptedBuilds -contains $markerValue) {
+        $detectedBuild = $markerValue
         $buildOk = $true
-        [IO.File]::WriteAllText($buildMarker, $expectedBuild, (New-Object System.Text.UTF8Encoding($false)))
     }
 }
 
 if (-not $buildOk) {
-    throw 'RPCS3 nie jest potwierdzony jako 0.0.43-20147-dfc0542a. Uruchom najpierw Guest\Update RPCS3 for Patras1993.cmd.'
+    throw 'RPCS3 nie jest obslugiwanym buildem. Dopuszczone: 20147-dfc0542a (stable) albo 20161 (test candidate).'
 }
 
-Write-Host "RPCS3 build: $expectedBuild OK"
+[IO.File]::WriteAllText($buildMarker, $detectedBuild, (New-Object System.Text.UTF8Encoding($false)))
+
+if ($detectedBuild -eq $candidateBuild) {
+    Write-Host "RPCS3 build: $detectedBuild TEST CANDIDATE"
+}
+else {
+    Write-Host "RPCS3 build: $detectedBuild STABLE"
+}
 
 if (-not (Test-Path -LiteralPath $nativePatchSource)) {
     throw "Brak patcha Revolution w projekcie: $nativePatchSource"
@@ -274,13 +293,13 @@ $configPath = Join-Path $PSScriptRoot 'guest_config.json'
 @{
     host_tailscale_ip = $hostIp
     rpcs3_directory = $rpcs3
-    required_rpcs3_build = $expectedBuild
+    required_rpcs3_build = $detectedBuild
     game = 'NPUB31250'
 } | ConvertTo-Json | Set-Content -LiteralPath $configPath -Encoding UTF8
 
 Write-Host ''
 Write-Host 'GUEST GOTOWY.'
-Write-Host "RPCS3: $expectedBuild"
+Write-Host "RPCS3: $detectedBuild"
 Write-Host 'Tekken Revolution: NPUB31250 01.05'
 Write-Host 'Patch: Patras1993 Revolution Runtime Patches'
 Write-Host "RPCN: $hostIp"
