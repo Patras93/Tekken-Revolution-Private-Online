@@ -1,74 +1,55 @@
 TEKKEN REVOLUTION PRIVATE ONLINE - GUEST
-v2.1.1 stable hotfix
+v2.2.0 RPCN DIRECT
 
 ========================================
 CO MUSISZ MIEC
 ========================================
 
 - RPCS3 0.0.43-20161-96ccd89c (preferowany)
-- Tekken Revolution NPUB31250
+- Tekken Revolution NPUB31250 01.05
 - Tailscale
-- ten folder Guest
+- folder Guest
 
-RPCS3 i Tekken Revolution nie sa czescia tego folderu.
-
-========================================
-UPDATE RPCS3
-========================================
-
-Preferowany i zweryfikowany build:
-RPCS3 0.0.43-20161-96ccd89c
-
-Aby ustawic dokladnie ten build, uruchom:
-Update RPCS3 for Patras1993.cmd
-
-Skrypt pobiera oficjalne archiwum RPCS3 i sprawdza SHA256.
-RPCS3 0.0.43-20147-dfc0542a pozostaje obslugiwanym fallbackiem.
+RPCS3 i gra nie sa czescia paczki.
 
 ========================================
 KROK 1 - TAILSCALE
 ========================================
 
-Dolacz do tej samej sieci Tailscale co osoba uruchamiajaca hosta.
-
-Host poda Ci swoj adres Tailscale w postaci:
+Dolacz do tej samej sieci Tailscale co host.
+Host poda adres:
 100.x.x.x
 
 ========================================
-KROK 2 - KONFIGURACJA
+KROK 2 - SETUP
 ========================================
 
-Uruchom:
+Uruchom jako administrator:
 
 Setup Online Guest.cmd
 
-jako administrator.
+Podaj tylko adres Tailscale hosta.
 
-Skrypt poprosi tylko o:
-1. adres Tailscale hosta.
-
-Nie musisz podawac sciezki do RPCS3.
-
-Skrypt automatycznie:
-- znajdzie rpcs3.exe,
-- znajdzie katalog RPCS3,
-- sprawdzi Tekken Revolution NPUB31250,
-- ustawi polaczenie z hostem,
-- przygotuje konfiguracje.
+Skrypt:
+- znajdzie RPCS3 z NPUB31250,
+- sprawdzi obslugiwany build RPCS3,
+- zainstaluje natywny patch Revolution,
+- ustawi RPCN bezposrednio na adres Tailscale hosta,
+- zachowa NPID/Password/Token,
+- usunie historyczne aliasy BTB z HOSTS,
+- nie doda zadnych nowych domen.
 
 ========================================
-KROK 3 - KONTO RPCN PATRAS1993
+KROK 3 - KONTO RPCN
 ========================================
 
-Konto na oficjalnym RPCN nie jest automatycznie kontem na prywatnym serwerze Patras1993.
+Konto oficjalnego RPCN nie jest kontem prywatnego serwera Patras1993.
 
-Jesli laczysz sie z Patras1993 pierwszy raz:
-1. Uruchom RPCS3 po wykonaniu Setup Online Guest.cmd.
-2. W ustawieniach RPCN wybierz serwer Patras1993.
-3. Utworz osobne konto RPCN na tym serwerze.
-4. Zaloguj sie na utworzone konto.
-
-Serwer Patras1993 nie wymaga potwierdzania adresu e-mail.
+Przy pierwszym polaczeniu:
+1. Uruchom RPCS3.
+2. Utworz osobne konto RPCN na serwerze Patras1993.
+3. Zaloguj sie.
+4. Komunikat "Twoje konto jest prawidlowe" oznacza sukces.
 
 ========================================
 KROK 4 - PRIVATE MATCH
@@ -78,62 +59,41 @@ Zamknij RPCS3 i uruchom:
 
 Private Match ON.cmd
 
-Ten preset ustawia:
+Preset:
 - HP obu graczy nie spada,
-- nieskonczony czas rundy,
-- pierwszego do 5 wygranych rund,
+- nieskonczony czas,
+- pierwszego do 5 rund,
 - maksymalnie 9 rund,
 - Final Round przy 4:4.
 
 ========================================
-KROK 5 - URUCHOMIENIE
+KROK 5 - START
 ========================================
 
-Po skonfigurowaniu i zalogowaniu konta uruchom:
+Uruchom:
 
 Start Online Guest.cmd
 
-Gra zostanie uruchomiona z wykrytego automatycznie katalogu RPCS3.
+Guest laczy sie bezposrednio:
+RPCN -> adres Tailscale hosta -> TCP 31313 / UDP 3657
+
+Backend HTTPS 443, launcher BTB i domeny BTB nie sa potrzebne.
 
 ========================================
-WAZNE
+RPCS3
 ========================================
 
-Guest NIE uruchamia lokalnego:
-- backendu,
-- RPCN.
+Preferowany:
+0.0.43-20161-96ccd89c
 
-Guest laczy sie z hostem przez Tailscale.
+Fallback:
+0.0.43-20147-dfc0542a
 
-Nie kopiuj:
-- USRDIR,
-- EBOOT.BIN,
-- calego RPCS3
-
-do folderu Guest.
+Updater:
+Update RPCS3 for Patras1993.cmd
 
 ========================================
 DOSTEPNOSC
 ========================================
 
-Skrypty sa przygotowane tak, aby konfiguracja byla mozliwa z klawiatury i z NVDA.
-
-========================================
-PROBLEM
-========================================
-
-Jesli RPCS3 nie zostanie znaleziony:
-- upewnij sie, ze rpcs3.exe znajduje sie na lokalnym dysku,
-- upewnij sie, ze Tekken Revolution jest zainstalowany jako NPUB31250,
-- sprawdz, czy Tailscale jest uruchomiony,
-- sprawdz adres Tailscale podany przez hosta.
-
-
-========================================
-STATUS v2.1.1 STABLE HOTFIX
-========================================
-
-Przetestowane 2026-10-02.
-Preferowany RPCS3 0.0.43-20161-96ccd89c dziala z zestawem Patras1993.
-Polaczenie przez Tailscale i prywatny RPCN dziala.
-Stare osobne P1 Health Shield / Practice Online Health nie sa juz uzywane.
+Skrypty sa przygotowane do obslugi klawiatura i NVDA.
