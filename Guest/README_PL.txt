@@ -1,5 +1,5 @@
 TEKKEN REVOLUTION PRIVATE ONLINE - GUEST
-v1.2.1
+v2.1.0 stable
 
 ========================================
 CO MUSISZ MIEC
@@ -58,7 +58,22 @@ Jesli laczysz sie z Patras1993 pierwszy raz:
 Serwer Patras1993 nie wymaga potwierdzania adresu e-mail.
 
 ========================================
-KROK 4 - URUCHOMIENIE
+KROK 4 - PRIVATE MATCH
+========================================
+
+Zamknij RPCS3 i uruchom:
+
+Private Match ON.cmd
+
+Ten preset ustawia:
+- HP obu graczy nie spada,
+- nieskonczony czas rundy,
+- pierwszego do 5 wygranych rund,
+- maksymalnie 9 rund,
+- Final Round przy 4:4.
+
+========================================
+KROK 5 - URUCHOMIENIE
 ========================================
 
 Po skonfigurowaniu i zalogowaniu konta uruchom:
@@ -99,3 +114,12 @@ Jesli RPCS3 nie zostanie znaleziony:
 - upewnij sie, ze Tekken Revolution jest zainstalowany jako NPUB31250,
 - sprawdz, czy Tailscale jest uruchomiony,
 - sprawdz adres Tailscale podany przez hosta.
+
+
+========================================
+STATUS v2.1.0 STABLE
+========================================
+
+Przetestowane host <-> guest 2026-10-02.
+Polaczenie przez Tailscale i prywatny RPCN dziala.
+Stare osobne P1 Health Shield / Practice Online Health nie sa juz uzywane.
