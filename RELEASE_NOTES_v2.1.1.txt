@@ -1,0 +1,45 @@
+PATRAS1993 TEKKEN REVOLUTION PRIVATE ONLINE
+VERSION 2.1.1 STABLE HOTFIX
+DATE: 2026-10-02
+
+STATUS
+- RPCS3 0.0.43-20161-96ccd89c: PASSED.
+- Tekken Revolution NPUB31250 01.05: PASSED.
+- Private Match: PASSED.
+- Backend HTTPS TCP 443: PASSED.
+- Private RPCN TCP 31313 / UDP 3657: PASSED.
+- Tailscale: PASSED.
+- Existing online setup remains operational after RPCS3 update.
+
+RPCS3
+- Preferred verified build: 0.0.43-20161-96ccd89c.
+- Full source commit: 96ccd89cd6931c32e66ef5c5e4f823e210c24c15.
+- Official Windows archive SHA256:
+  847f25f4b689797e26a63277782b4f9b13b64028eeae1d0f2448b91af8f0ccbb
+- RPCS3 0.0.43-20147-dfc0542a remains an emergency compatibility fallback.
+
+HOTFIXES
+- Repaired corrupted local_backend/server.ps1 request handler.
+- Backend again starts correctly on 0.0.0.0:443.
+- Host start now prints backend error details if HTTPS fails.
+- Added full Host Backup/Restore.
+- Fixed PowerShell $HOME collision in backup.
+- Backup preserves private RPCN runtime state, certificates and RPCS3 user state.
+- Added NVDA-friendly RPCS3 20161 compatibility tester.
+- Guest detects the verified 20161 build more reliably.
+- Guest updater pins the exact verified 20161 archive instead of downgrading to 20147.
+
+PRIVATE MATCH
+- HP obu graczy nie spada.
+- Nieskonczony czas rundy.
+- Pierwszy do 5 wygranych rund.
+- Maksymalnie 9 rund.
+- Final Round przy 4:4.
+
+REQUIRED
+- Preferred: RPCS3 0.0.43-20161-96ccd89c.
+- Fallback: RPCS3 0.0.43-20147-dfc0542a.
+- RPCN 1.10.0 / protocol 32.
+- Tailscale.
+
+v2.1.0 remains preserved as the previous stable snapshot.
