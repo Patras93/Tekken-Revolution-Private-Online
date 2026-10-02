@@ -9,6 +9,18 @@ $hostConfigFile = Join-Path $root 'host_config.json'
 $preferredRpcs3 = 'E:\instalacje gier\rpcs3-v0.0.43-20146-4d88114c_win64\rpcs3.exe'
 
 $requiredRpcnVersion = '1.10.0'
+
+# v2.2.0: zatrzymaj pozostalosci starego backendu HTTPS, jesli jeszcze dzialaja.
+Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
+    ($_.Name -ieq 'powershell.exe' -or $_.Name -ieq 'pwsh.exe') -and
+    $_.CommandLine -match '(?i)local_backend[\\/]server\.ps1'
+} | ForEach-Object {
+    Write-Host "Legacy backend 443: zatrzymywanie PID $($_.ProcessId)..."
+    Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+}
+Get-NetFirewallRule -DisplayName 'Patras1993 Tekken Revolution HTTPS' -ErrorAction SilentlyContinue |
+    Remove-NetFirewallRule -ErrorAction SilentlyContinue
+
 $rpcnZipUrl = 'https://github.com/RipleyTom/rpcn/releases/download/1.10.0/rpcn-win.zip'
 $rpcnZipSha256 = '439e4f08bd8485194b36fb33b6da86a21a97adda56c968c75872918cf64ea663'
 
