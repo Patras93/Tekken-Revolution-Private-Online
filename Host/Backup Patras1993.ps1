@@ -94,7 +94,7 @@ try {
     $manifest = @"
 PATRAS1993 FULL BACKUP
 Data: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
-Wersja: v2.1.0 stable
+Wersja: v2.1.1 stable hotfix
 
 Zawiera:
 - Host i jego konfiguracje,
