@@ -21,7 +21,7 @@ try {
         Start-Sleep -Milliseconds 500
     }
 
-    foreach ($name in @('Host','local_backend','local_rpcn','local_patch')) {
+    foreach ($name in @('Host','local_rpcn','local_patch')) {
         $src = Join-Path $repoRoot $name
         if (Test-Path -LiteralPath $src) {
             Copy-Item -LiteralPath $src -Destination (Join-Path $stage $name) -Recurse -Force
@@ -65,25 +65,6 @@ try {
         }
     }
 
-    # Eksport certyfikatu backendu z kluczem prywatnym.
-    $thumbFile = Join-Path $repoRoot 'local_backend\server_cert_thumbprint.txt'
-    if (Test-Path -LiteralPath $thumbFile) {
-        $thumb = (Get-Content -LiteralPath $thumbFile -Raw).Trim()
-        if ($thumb) {
-            $cert = Get-Item ("Cert:\CurrentUser\My\$thumb") -ErrorAction SilentlyContinue
-            if ($cert -and $cert.HasPrivateKey) {
-                $chars = 'abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789!@#$%*-_'
-                $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-                $bytes = New-Object byte[] 32
-                $rng.GetBytes($bytes)
-                $password = -join ($bytes | ForEach-Object { $chars[$_ % $chars.Length] })
-                $secure = ConvertTo-SecureString -String $password -AsPlainText -Force
-                Export-PfxCertificate -Cert $cert -FilePath (Join-Path $stage 'backend-cert.pfx') -Password $secure -Force | Out-Null
-                [IO.File]::WriteAllText((Join-Path $stage 'backend-cert-password.txt'), $password, [Text.UTF8Encoding]::new($false))
-            }
-        }
-    }
-
     # Informacja o Tailscale - sam tailnet jest przechowywany po stronie Tailscale.
     $tailscale = Get-Command tailscale.exe -ErrorAction SilentlyContinue
     if ($tailscale) {
@@ -94,16 +75,14 @@ try {
     $manifest = @"
 PATRAS1993 FULL BACKUP
 Data: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')
-Wersja: v2.1.1 stable hotfix
+Wersja: v2.2.0 RPCN Direct
 
 Zawiera:
 - Host i jego konfiguracje,
 - caly local_rpcn (baza kont, cert.pem/key.pem i dane RPCN),
-- local_backend,
 - local_patch,
 - najwazniejsze ustawienia RPCS3,
 - dev_hdd0\home z danymi uzytkownika,
-- certyfikat backendu wraz z kluczem prywatnym, jesli byl dostepny,
 - informacje o aktualnym Tailscale.
 
 Nie zawiera:
