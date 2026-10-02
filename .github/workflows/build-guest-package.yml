@@ -1,0 +1,36 @@
+name: Build Guest Package
+
+on:
+  push:
+    branches:
+      - patras1993-independent-server
+    paths:
+      - "Guest/**"
+      - ".github/workflows/build-guest-package.yml"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Guest ZIP
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $out = 'Patras1993-Tekken-Revolution-Guest.zip'
+          if (Test-Path $out) { Remove-Item $out -Force }
+          Compress-Archive -Path 'Guest\*' -DestinationPath $out -CompressionLevel Optimal
+          $zip = Get-Item $out
+          Write-Host "Guest ZIP: $($zip.FullName)"
+          Write-Host "Size: $($zip.Length) bytes"
+
+      - name: Upload Guest ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: Patras1993-Tekken-Revolution-Guest
+          path: Patras1993-Tekken-Revolution-Guest.zip
+          if-no-files-found: error
+          retention-days: 30
