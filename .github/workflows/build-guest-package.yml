@@ -1,4 +1,5 @@
 name: Build Stable Packages
+# stable-source: v2.1.0-final
 
 on:
   push:
