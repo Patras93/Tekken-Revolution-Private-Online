@@ -122,5 +122,27 @@ Write-Host ('Logi: ' + $logDir)
 
 if (-not $https -or -not $rpcnTcp -or -not $rpcnUdp) {
     Write-Host 'UWAGA: jeden z wymaganych portow nie nasluchuje.'
+
+    if (-not $https) {
+        Write-Host ''
+        Write-Host '=== BACKEND ERROR ==='
+        if (Test-Path -LiteralPath $backendErrLog) {
+            $err = Get-Content -LiteralPath $backendErrLog -Tail 20 -ErrorAction SilentlyContinue
+            if ($err) { $err | ForEach-Object { Write-Host $_ } }
+            else { Write-Host 'backend.err.log jest pusty.' }
+        }
+        else {
+            Write-Host 'Brak backend.err.log.'
+        }
+
+        $backendInternalLog = Join-Path (Split-Path -Parent $backend) 'server.log'
+        if (Test-Path -LiteralPath $backendInternalLog) {
+            Write-Host ''
+            Write-Host '=== BACKEND SERVER.LOG ==='
+            Get-Content -LiteralPath $backendInternalLog -Tail 20 -ErrorAction SilentlyContinue |
+                ForEach-Object { Write-Host $_ }
+        }
+    }
+
     exit 2
 }
