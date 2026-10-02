@@ -10,4 +10,3 @@ local_rpcn/rpcn_version.txt
 local_rpcn/rpcn.exe.before-*.bak
 local_backend/server_cert_thumbprint.txt
 
-Host/no_btb_config.json
