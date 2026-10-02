@@ -104,10 +104,10 @@ if (-not $runningRpcs3) {
 }
 
 $evidence = Get-Rpcs3VersionEvidence -Exe $rpcs3Exe -Dir $rpcs3Dir
-$versionOk = $evidence -match '0\.0\.43-20161|\b20161\b'
+$versionOk = $evidence -match '0\.0\.43-20161-96ccd89c|20161-96ccd89c'
 $versionDetail = ''
 if ($versionOk) {
-    $m = [regex]::Match($evidence, '0\.0\.43-20161(?:-[A-Za-z0-9]+)?')
+    $m = [regex]::Match($evidence, '0\.0\.43-20161-96ccd89c')
     if ($m.Success) { $versionDetail = $m.Value }
     else { $versionDetail = '20161 wykryty' }
 }
@@ -175,9 +175,9 @@ $localOk = $versionOk -and
            $rpcnTcp -and $rpcnUdp -and $https -and $tailscaleOk
 
 if ($localOk) {
-    [IO.File]::WriteAllText((Join-Path $rpcs3Dir 'patras1993_rpc3_build.txt'), '0.0.43-20161', (New-Object System.Text.UTF8Encoding($false)))
-    Write-Host 'LOKALNY TEST 20161: PASS.'
-    Write-Host 'Nastepny etap: realny test online z Guest.'
+    [IO.File]::WriteAllText((Join-Path $rpcs3Dir 'patras1993_rpc3_build.txt'), '0.0.43-20161-96ccd89c', (New-Object System.Text.UTF8Encoding($false)))
+    Write-Host 'TEST PATRAS1993 v2.1.1: PASS.'
+    Write-Host 'RPCS3 0.0.43-20161-96ccd89c jest zweryfikowany.'
     exit 0
 }
 
