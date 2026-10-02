@@ -31,8 +31,8 @@ replace_once(
     "\t\tif (ppu && g_breakpoint_handler.HasBreakpoint(addr, breakpoint_types::bp_write))\n",
     "\t\tg_base_addr[addr] = value;\n\n"
     "#ifdef RPCS3_HAS_MEMORY_BREAKPOINTS\n"
-    "\t\tif (ppu && ((addr >= 0x012D9F74 && addr <= 0x012D9F77) || "
-    "(addr >= 0x012DC414 && addr <= 0x012DC417)))\n"
+    "\t\tif (ppu && ((addr >= 0x012D9F60 && addr <= 0x012D9F67) || "
+    "(addr >= 0x012DC400 && addr <= 0x012DC407)))\n"
     "\t\t{\n"
     "\t\t\tpatras1993_hp_trace(*ppu, addr, 1);\n"
     "\t\t}\n\n"
@@ -47,8 +47,8 @@ replace_once(
     "\t\t\tif (ppu)\n"
     "\t\t\t{\n"
     "\t\t\t\tconst u64 write_end = static_cast<u64>(addr) + sizeof(dest_t) - 1;\n"
-    "\t\t\t\tif ((addr <= 0x012D9F77 && write_end >= 0x012D9F74) || "
-    "(addr <= 0x012DC417 && write_end >= 0x012DC414))\n"
+    "\t\t\t\tif ((addr <= 0x012D9F67 && write_end >= 0x012D9F60) || "
+    "(addr <= 0x012DC407 && write_end >= 0x012DC400))\n"
     "\t\t\t\t{\n"
     "\t\t\t\t\tpatras1993_hp_trace(*ppu, addr, static_cast<u32>(sizeof(dest_t)));\n"
     "\t\t\t\t}\n"
@@ -76,4 +76,4 @@ replace_once(
 )
 
 print("Patras1993 HP trace instrumentation applied.")
-print("Targets: P1 0x012D9F74..0x012D9F77, P2 0x012DC414..0x012DC417")
+print("Targets: P1 current HP 0x012D9F60..0x012D9F67, P2 current HP 0x012DC400..0x012DC407")
