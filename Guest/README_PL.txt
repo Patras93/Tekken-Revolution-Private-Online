@@ -1,16 +1,29 @@
 TEKKEN REVOLUTION PRIVATE ONLINE - GUEST
-v2.1.0 stable
+v2.1.1 stable hotfix
 
 ========================================
 CO MUSISZ MIEC
 ========================================
 
-- RPCS3
+- RPCS3 0.0.43-20161-96ccd89c (preferowany)
 - Tekken Revolution NPUB31250
 - Tailscale
 - ten folder Guest
 
 RPCS3 i Tekken Revolution nie sa czescia tego folderu.
+
+========================================
+UPDATE RPCS3
+========================================
+
+Preferowany i zweryfikowany build:
+RPCS3 0.0.43-20161-96ccd89c
+
+Aby ustawic dokladnie ten build, uruchom:
+Update RPCS3 for Patras1993.cmd
+
+Skrypt pobiera oficjalne archiwum RPCS3 i sprawdza SHA256.
+RPCS3 0.0.43-20147-dfc0542a pozostaje obslugiwanym fallbackiem.
 
 ========================================
 KROK 1 - TAILSCALE
@@ -117,9 +130,10 @@ Jesli RPCS3 nie zostanie znaleziony:
 
 
 ========================================
-STATUS v2.1.0 STABLE
+STATUS v2.1.1 STABLE HOTFIX
 ========================================
 
-Przetestowane host <-> guest 2026-10-02.
+Przetestowane 2026-10-02.
+Preferowany RPCS3 0.0.43-20161-96ccd89c dziala z zestawem Patras1993.
 Polaczenie przez Tailscale i prywatny RPCN dziala.
 Stare osobne P1 Health Shield / Practice Online Health nie sa juz uzywane.
