@@ -1,0 +1,32 @@
+PATRAS1993 TEKKEN REVOLUTION PRIVATE ONLINE
+VERSION 2.1.0 STABLE
+DATE: 2026-10-02
+
+STATUS
+- End-to-end host/guest test: PASSED.
+- Tailscale host <-> guest: PASSED.
+- Private RPCN connection: PASSED.
+- Tekken Revolution NPUB31250 01.05 online: PASSED.
+- Private Match preset: PASSED.
+
+PRIVATE MATCH
+- HP obu graczy nie spada.
+- Nieskonczony czas rundy.
+- Pierwszy do 5 wygranych rund.
+- Maksymalnie 9 rund.
+- Final Round przy 4:4.
+
+REQUIRED
+- RPCS3 0.0.43-20147-dfc0542a.
+- RPCN 1.10.0 / protocol 32.
+- Tailscale.
+
+CLEANUP
+- Usunieto stare Practice Online Health ON/OFF.
+- Usunieto stare P1 Health Shield ON/OFF.
+- Usunieto eksperymentalny P1 Health Shield z patcha.
+- Usunieto skaner P1 Health.
+- Usunieto testowe narzedzia Decrypt Revolution EBOOT.
+- Setup Host i Guest ignoruje Kosz oraz katalogi systemowe przy wykrywaniu RPCS3.
+
+To jest zamrozona stabilna baza do dalszego rozwoju.
