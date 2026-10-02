@@ -1,4 +1,4 @@
-TEKKEN REVOLUTION PRIVATE ONLINE - PATRAS1993 v2.1.0 STABLE
+TEKKEN REVOLUTION PRIVATE ONLINE - PATRAS1993 v2.1.1 STABLE HOTFIX
 
 ========================================
 CEL
@@ -120,7 +120,7 @@ Gra:
 dev_hdd0\game\NPUB31250
 
 ========================================
-STATUS v2.1.0 STABLE
+STATUS v2.1.1 STABLE HOTFIX
 ========================================
 
 Gotowe:
@@ -133,10 +133,13 @@ Gotowe:
 - Guest start bez ręcznego wpisywania ścieżki RPCS3,
 - Tailscale jako transport host <-> guest.
 
-Wymagana para:
-- RPCS3 0.0.43-20147-dfc0542a,
+Preferowana para:
+- RPCS3 0.0.43-20161-96ccd89c,
 - RPCN 1.10.0,
 - RPCN protocol 32.
+
+Awaryjny fallback RPCS3:
+- 0.0.43-20147-dfc0542a.
 
 Potwierdzone end-to-end 2026-10-02:
 - certyfikat/backend HTTPS dziala w zestawie host/guest,
@@ -174,7 +177,7 @@ Eksperymentalny P1 Health Shield zostal usuniety z patcha.
 BACKUP STANU SERWERA
 ========================================
 
-Stabilna galaz stable-v2.1.0 i paczki v2.1.0 zachowuja kod oraz konfiguracje bazowa.
+Stabilna galaz stable-v2.1.1 i paczki v2.1.1 zachowuja kod oraz konfiguracje bazowa.
 Nie sa kopia zywej bazy kont utworzonych pozniej na prywatnym RPCN.
 
 Aby zachowac aktualny stan hosta, uruchom:
@@ -206,48 +209,38 @@ zeby baza kont i klucze nie trafily przypadkiem do repozytorium.
 
 
 ========================================
-RPCS3 20161 - TEST CANDIDATE
+RPCS3 20161 - POTWIERDZONE 2026-10-02
 ========================================
 
-Stabilna baza v2.1.0 pozostaje przypieta do:
-RPCS3 0.0.43-20147-dfc0542a.
-
-Na galezi patras1993-independent-server dopuszczony jest test:
-RPCS3 0.0.43-20161.
-
-Po aktualizacji RPCS3 przez jego oficjalny updater uruchom:
-Host\Test RPCS3 20161.cmd
-
-Tester sprawdza:
-- wykrycie builda 20161,
-- NPUB31250,
-- patch,
-- Private Match,
-- RPCN TCP 31313,
-- backend TCP 443,
-- Tailscale.
-
-Dopiero po realnym tescie online host/guest 20161 moze zastapic 20147
-jako wersje bazowa. Do tego czasu stable-v2.1.0 nie jest zmieniany.
-
-
-========================================
-RPCS3 20161 - TEST LOKALNY 2026-10-02
-========================================
-
-Dokladny build:
+Preferowany i sprawdzony build:
 RPCS3 0.0.43-20161-96ccd89c
 
-Wynik lokalny:
-- RPCS3 20161: PASS,
+Pelny commit RPCS3:
+96ccd89cd6931c32e66ef5c5e4f823e210c24c15
+
+Potwierdzone:
 - Tekken Revolution NPUB31250: PASS,
-- patch NPUB31250: PASS,
 - Private Match: PASS,
 - backend HTTPS TCP 443: PASS,
 - RPCN TCP 31313: PASS,
 - RPCN UDP 3657: PASS,
-- Tailscale: PASS.
+- Tailscale: PASS,
+- dzialajacy zestaw po aktualizacji RPCS3: PASS.
 
-Nastepny etap:
-realny test online Host 20161 <-> Guest.
-Do czasu tego testu stable-v2.1.0 pozostaje na sprawdzonym RPCS3 20147.
+RPCS3 0.0.43-20147-dfc0542a pozostaje awaryjnym fallbackiem.
+
+Guest\Update RPCS3 for Patras1993.cmd pobiera dokladnie zweryfikowany
+build 20161-96ccd89c i sprawdza SHA256 przed instalacja.
+
+========================================
+HOTFIX v2.1.1
+========================================
+
+- naprawiony uszkodzony local_backend\server.ps1,
+- backend ponownie nasluchuje na 0.0.0.0:443,
+- Host Start pokazuje szczegoly bledu backendu, jesli port 443 nie wystartuje,
+- dodany pelny Backup/Restore stanu prywatnego serwera,
+- naprawiona kolizja zmiennej PowerShell $HOME w Backup,
+- dodany tester RPCS3 20161 przyjazny dla NVDA,
+- Guest rozpoznaje dokladny zweryfikowany build 20161,
+- updater Guest jest przypiety do oficjalnego archiwum 20161-96ccd89c.
