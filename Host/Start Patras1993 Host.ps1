@@ -15,6 +15,37 @@ $backendErrLog = Join-Path $logDir 'backend.err.log'
 $rpcnOutLog = Join-Path $logDir 'rpcn.out.log'
 $rpcnErrLog = Join-Path $logDir 'rpcn.err.log'
 
+
+function Get-RpcnActualVersion {
+    param([Parameter(Mandatory=$true)][string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path)) { return $null }
+
+    $tmp = Join-Path $env:TEMP ('Patras1993-RPCN-Version-' + [guid]::NewGuid().ToString('N'))
+    $out = Join-Path $tmp 'stdout.txt'
+    $err = Join-Path $tmp 'stderr.txt'
+    New-Item -ItemType Directory -Path $tmp -Force | Out-Null
+
+    try {
+        $p = Start-Process -FilePath $Path -WorkingDirectory $tmp -ArgumentList '--cert-gen' -PassThru -WindowStyle Hidden -RedirectStandardOutput $out -RedirectStandardError $err
+        if (-not $p.WaitForExit(8000)) {
+            try { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue } catch {}
+        }
+
+        $text = ''
+        if (Test-Path -LiteralPath $out) { $text += [IO.File]::ReadAllText($out) }
+        if (Test-Path -LiteralPath $err) { $text += [Environment]::NewLine + [IO.File]::ReadAllText($err) }
+
+        $m = [regex]::Match($text, 'RPCN\s+v(?<v>[0-9]+\.[0-9]+\.[0-9]+)', 'IgnoreCase')
+        if ($m.Success) { return $m.Groups['v'].Value }
+
+        return $null
+    }
+    finally {
+        Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
+
 Write-Host '=== PATRAS1993 HOST ==='
 Write-Host "Katalog: $repo"
 
@@ -38,11 +69,16 @@ if (-not (Test-Path -LiteralPath $rpcnVersionFile)) {
     throw 'Brak local_rpcn\rpcn_version.txt. Uruchom Host\Setup Patras1993 Host.cmd jako administrator.'
 }
 
-$rpcnVersion = (Get-Content -LiteralPath $rpcnVersionFile -Raw).Trim()
-if ($rpcnVersion -ne $requiredRpcnVersion) {
-    throw "RPCN musi miec wersje $requiredRpcnVersion (protocol 32). Uruchom Host\Setup Patras1993 Host.cmd jako administrator. Zapisana wersja: $rpcnVersion"
+$rpcnVersionMarker = (Get-Content -LiteralPath $rpcnVersionFile -Raw).Trim()
+$rpcnActualVersion = Get-RpcnActualVersion -Path $rpcn
+
+if ($rpcnActualVersion -ne $requiredRpcnVersion) {
+    throw "RPCN rzeczywisty to v$rpcnActualVersion, a wymagany jest v$requiredRpcnVersion (protocol 32). Uruchom Host\Setup Patras1993 Host.cmd jako administrator."
 }
-Write-Host "RPCN wersja: $rpcnVersion (protocol 32)"
+if ($rpcnVersionMarker -ne $rpcnActualVersion) {
+    [IO.File]::WriteAllText($rpcnVersionFile, $rpcnActualVersion, [Text.UTF8Encoding]::new($false))
+}
+Write-Host "RPCN rzeczywista wersja: $rpcnActualVersion (protocol 32)"
 
 function TcpPortOpen([int]$Port) {
     try {
