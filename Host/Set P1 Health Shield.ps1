@@ -26,6 +26,16 @@ if (-not (Test-Path -LiteralPath $patchConfigPath)) {
     throw "Brak patch_config.yml: $patchConfigPath"
 }
 
+$repoRoot = Split-Path -Parent $PSScriptRoot
+$patchSource = Join-Path $repoRoot 'local_patch\NPUB31250_patch.yml'
+$patchTarget = Join-Path $rpcs3 'patches\NPUB31250_patch.yml'
+if (-not (Test-Path -LiteralPath $patchSource)) {
+    throw "Brak aktualnego patcha projektu: $patchSource"
+}
+New-Item -ItemType Directory -Path (Split-Path -Parent $patchTarget) -Force | Out-Null
+Copy-Item -LiteralPath $patchSource -Destination $patchTarget -Force
+Write-Host ('Patch zsynchronizowany: ' + $patchTarget)
+
 $hashKey = 'PPU-1504b75ba97abccdf2d0a93dd93aaff10591a01e:'
 $descLine = '  "Patras1993 P1 Health Shield - Experimental":'
 $enabledValue = if ($Mode -eq 'On') { 'true' } else { 'false' }
