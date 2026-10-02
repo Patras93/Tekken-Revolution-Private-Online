@@ -1,0 +1,47 @@
+PATRAS1993 TEKKEN REVOLUTION PRIVATE ONLINE
+RELEASE NOTES v2.2.0 - RPCN DIRECT
+
+Data: 2026-10-02
+
+NAJWAZNIEJSZE
+- calkowite odciecie runtime od infrastruktury TekkenBTB,
+- usuniety backend HTTPS TCP 443,
+- usuniete domeny patch.tekkenbtb.online i rpcn.tekkenbtb.online,
+- RPCN hosta: 127.0.0.1,
+- RPCN goscia: bezposredni adres Tailscale hosta,
+- RPCN 1.10.0 / protocol 32,
+- natywny patch RPCS3 pozostaje jedynym mechanizmem patchowania gry.
+
+NAPRAWA RPCN
+Wykryto, ze rpcn_version.txt wskazywal 1.10.0, podczas gdy faktyczny
+rpcn.exe byl wersji 1.8.7. Powodowalo to:
+RPCN Błąd wersji protokołu (przestarzała wersja RPCS3?)
+
+v2.2.0 nie ufa juz samemu markerowi wersji.
+Setup i Start odczytuja rzeczywista wersje rpcn.exe.
+Stara wersja jest automatycznie wymieniana na oficjalne RPCN 1.10.0.
+
+POTWIERDZONE
+- RPCS3 0.0.43-20161-96ccd89c oczekuje protocol 32,
+- RPCN 1.10.0 uzywa protocol 32,
+- konto Patras1993: prawidlowe,
+- Tekken Revolution online: dziala,
+- gra dziala po usunieciu wpisow BTB z HOSTS.
+
+PRIVATE MATCH
+- HP obu graczy nie spada,
+- czas nieskonczony,
+- first to 5,
+- max 9,
+- Final Round przy 4:4.
+
+USUNIETE JAKO LEGACY
+- lokalny backend HTTPS,
+- version.dll hook,
+- updater launchera,
+- moduly backendu,
+- endpointy launchera,
+- No-BTB ON/OFF po przejsciu na architekture RPCN Direct.
+
+STABILNA BAZA POPRZEDNIA
+stable-v2.1.1 pozostaje nienaruszona jako rollback historyczny.
