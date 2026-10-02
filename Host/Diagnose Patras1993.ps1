@@ -88,7 +88,7 @@ else {
 
 Write-Host ''
 
-$logPath = $logCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf -and $_ -notlike '*.gz' } | Select-Object -First 1
+$logPath = $logCandidates | Where-Object { (Test-Path -LiteralPath $_ -PathType Leaf) -and ($_ -notlike '*.gz') } | Select-Object -First 1
 
 if (-not $logPath) {
     Write-Host 'RPCS3 LOG: nie znaleziono zwyklego tekstowego RPCS3.log.'
@@ -102,7 +102,10 @@ $logLines = Get-Content -LiteralPath $logPath -ErrorAction Stop
 $hashLine = $logLines | Where-Object { $_ -like "*PPU executable hash: $expectedHash*" } | Select-Object -Last 1
 $applied = $logLines | Where-Object { $_ -like "*Applied patch*Patras1993 Revolution Runtime Patches*" } | Select-Object -Last 5
 $patErrors = $logLines | Where-Object { $_ -match 'PAT:.*(Error|Fatal|Skipping|Failed)' } | Select-Object -Last 20
-$tss = $logLines | Where-Object { $_ -like '*sceNpTssGetDataAsync*slotId=14*' } | Select-Object -Last 5
+$tss = $logLines | Where-Object { $_ -match 'sceNpTss(GetDataAsync|GetData|GetDataResult)|slotId=14|TSS' } | Select-Object -Last 30
+$saveData = $logLines | Where-Object { $_ -match '(?i)save data|savedata|download.*save|upload.*save' } | Select-Object -Last 30
+$fatal = $logLines | Where-Object { $_ -match '(?i)(fatal|access violation|exception|segfault|crash|abort|unhandled|sys_process_exit)' } | Select-Object -Last 40
+$network = $logLines | Where-Object { $_ -match '(?i)(RPCN|sceNp|NPDRM|communication error|authentication|network)' } | Select-Object -Last 40
 
 Write-Host ''
 Write-Host '=== PPU HASH ==='
@@ -120,9 +123,24 @@ if ($patErrors) { $patErrors | ForEach-Object { Write-Host $_ } }
 else { Write-Host 'Brak bledow PAT w logu.' }
 
 Write-Host ''
-Write-Host '=== TSS SLOT 14 ==='
+Write-Host '=== TSS / SAVE DATA ==='
 if ($tss) { $tss | ForEach-Object { Write-Host $_ } }
-else { Write-Host 'Brak wywolania TSS slot 14 w aktualnym logu.' }
+else { Write-Host 'Brak wpisow TSS w aktualnym logu.' }
+
+Write-Host ''
+Write-Host '=== SAVE DATA ==='
+if ($saveData) { $saveData | ForEach-Object { Write-Host $_ } }
+else { Write-Host 'Brak wpisow save data w aktualnym logu.' }
+
+Write-Host ''
+Write-Host '=== RPCN / NETWORK ==='
+if ($network) { $network | ForEach-Object { Write-Host $_ } }
+else { Write-Host 'Brak istotnych wpisow RPCN/network.' }
+
+Write-Host ''
+Write-Host '=== FATAL / CRASH ==='
+if ($fatal) { $fatal | ForEach-Object { Write-Host $_ } }
+else { Write-Host 'Brak jawnych wpisow fatal/crash w aktualnym logu.' }
 
 Write-Host ''
 Write-Host '=== KONIEC DIAGNOSTYKI ==='
