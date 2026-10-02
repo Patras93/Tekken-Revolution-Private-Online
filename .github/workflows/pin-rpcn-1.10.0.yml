@@ -1,0 +1,77 @@
+name: Pin RPCN 1.10.0 Binary
+
+on:
+  push:
+    branches:
+      - v2.2.0-no-btb
+    paths:
+      - ".github/workflows/pin-rpcn-1.10.0.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  pin:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout v2.2.0 RC
+        uses: actions/checkout@v4
+        with:
+          ref: v2.2.0-no-btb
+
+      - name: Download and verify official RPCN 1.10.0
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $url = 'https://github.com/RipleyTom/rpcn/releases/download/1.10.0/rpcn-win.zip'
+          $expected = '439e4f08bd8485194b36fb33b6da86a21a97adda56c968c75872918cf64ea663'
+          $zip = Join-Path $env:RUNNER_TEMP 'rpcn-win.zip'
+          $out = Join-Path $env:RUNNER_TEMP 'rpcn-unpack'
+
+          Invoke-WebRequest -Uri $url -OutFile $zip
+          $hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($hash -ne $expected) {
+            throw "RPCN zip SHA256 mismatch: $hash"
+          }
+
+          Expand-Archive -LiteralPath $zip -DestinationPath $out -Force
+          $exe = Get-ChildItem -LiteralPath $out -Filter 'rpcn.exe' -File -Recurse | Select-Object -First 1
+          if (-not $exe) {
+            throw 'rpcn.exe not found in official RPCN 1.10.0 archive.'
+          }
+
+          New-Item -ItemType Directory -Path 'local_rpcn' -Force | Out-Null
+          Copy-Item -LiteralPath $exe.FullName -Destination 'local_rpcn\rpcn.exe' -Force
+          [IO.File]::WriteAllText('local_rpcn\rpcn_version.txt','1.10.0',[Text.UTF8Encoding]::new($false))
+
+          $verifyDir = Join-Path $env:RUNNER_TEMP 'rpcn-version-check'
+          New-Item -ItemType Directory -Path $verifyDir -Force | Out-Null
+          $stdout = Join-Path $verifyDir 'stdout.txt'
+          $stderr = Join-Path $verifyDir 'stderr.txt'
+          $p = Start-Process -FilePath (Resolve-Path 'local_rpcn\rpcn.exe') -WorkingDirectory $verifyDir -ArgumentList '--cert-gen' -Wait -PassThru -RedirectStandardOutput $stdout -RedirectStandardError $stderr
+          $text = ''
+          if (Test-Path $stdout) { $text += Get-Content $stdout -Raw }
+          if (Test-Path $stderr) { $text += Get-Content $stderr -Raw }
+          if ($text -notmatch 'RPCN\s+v1\.10\.0') {
+            throw "Downloaded rpcn.exe did not report v1.10.0. Output: $text"
+          }
+
+          Write-Host 'RPCN 1.10.0 binary verified.'
+
+      - name: Commit verified RPCN binary
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- 'local_rpcn/rpcn.exe' 'local_rpcn/rpcn_version.txt'
+
+          git diff --cached --quiet
+          if ($LASTEXITCODE -eq 0) {
+            Write-Host 'RPCN 1.10.0 already pinned.'
+            exit 0
+          }
+
+          git commit -m "Pin official RPCN 1.10.0 binary"
+          git push origin HEAD:v2.2.0-no-btb
