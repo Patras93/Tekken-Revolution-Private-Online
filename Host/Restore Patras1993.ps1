@@ -1,9 +1,9 @@
-$ErrorActionPreference = 'Stop'
-
 param(
     [Parameter(Mandatory=$false)]
     [string]$BackupZip
 )
+
+$ErrorActionPreference = 'Stop'
 
 $hostDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = Split-Path -Parent $hostDir
@@ -47,7 +47,7 @@ try {
         if (Test-Path -LiteralPath $src) {
             $dst = Join-Path $repoRoot $name
             New-Item -ItemType Directory -Path $dst -Force | Out-Null
-            Copy-Item -LiteralPath (Join-Path $src '*') -Destination $dst -Recurse -Force
+            Copy-Item -Path (Join-Path $src '*') -Destination $dst -Recurse -Force
         }
     }
 
@@ -85,7 +85,7 @@ try {
         $rpcs3Dir = [string]$cfg.rpcs3_directory
         $state = Join-Path $stage 'RPCS3_STATE'
         if ($rpcs3Dir -and (Test-Path -LiteralPath $rpcs3Dir) -and (Test-Path -LiteralPath $state)) {
-            Copy-Item -LiteralPath (Join-Path $state '*') -Destination $rpcs3Dir -Recurse -Force
+            Copy-Item -Path (Join-Path $state '*') -Destination $rpcs3Dir -Recurse -Force
         }
         elseif (Test-Path -LiteralPath $state) {
             Write-Host 'UWAGA: RPCS3 ma inna lub nieistniejaca sciezke. Stan RPCS3 nie zostal automatycznie skopiowany.'
