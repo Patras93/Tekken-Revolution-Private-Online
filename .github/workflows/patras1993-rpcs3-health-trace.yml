@@ -77,6 +77,7 @@ jobs:
           set -eux
           cd "${{ github.workspace }}/rpcs3-src"
           export CCACHE_DIR=$(cygpath -u "$CCACHE_DIR")
+          export RELEASE_MESSAGE="$(cygpath -u "$RUNNER_TEMP")/patras1993-rpcs3-release-message.txt"
           .ci/setup-windows-ci-vars.sh x86_64 clang
           .ci/build-windows-clang.sh x86_64 clang64
 
