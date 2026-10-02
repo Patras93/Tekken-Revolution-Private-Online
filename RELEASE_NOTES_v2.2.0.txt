@@ -45,3 +45,28 @@ USUNIETE JAKO LEGACY
 
 STABILNA BAZA POPRZEDNIA
 stable-v2.1.1 pozostaje nienaruszona jako rollback historyczny.
+
+NAPRAWA TUS / DOWNLOADING SAVE DATA
+Po migracji do czystego v2.2.0 wykryto crash przy:
+Downloading save data...
+
+Log RPCS3 pokazal:
+- sceNpTusGetDataAsync dla slotId=1,
+- zerwanie polaczenia RPCN przez serwer.
+
+Przyczyna:
+brak runtimeowego pliku local_rpcn\tus_data\00000000000000000001.tdt
+przy zachowanej bazie RPCN.
+
+Naprawa:
+- odzyskano plik TUS,
+- potwierdzono ponowne uruchomienie Tekken Revolution,
+- local_rpcn\db\ i local_rpcn\tus_data\ sa od v2.2.0 ignorowane przez Git,
+  aby runtimeowe dane kont/TUS nie byly nadpisywane przez Pull/reset.
+
+FINALNE POTWIERDZENIE
+- Tekken Revolution uruchamia sie poprawnie,
+- Downloading save data przechodzi,
+- RPCN 1.10.0 / protocol 32 dziala,
+- backend HTTPS 443 pozostaje niepotrzebny,
+- v2.2.0 RPCN Direct gotowe do zamrozenia jako stable-v2.2.0.
