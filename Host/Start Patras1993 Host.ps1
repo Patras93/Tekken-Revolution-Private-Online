@@ -8,6 +8,12 @@ $rpcnVersionFile = Join-Path $rpcnDir 'rpcn_version.txt'
 $rpcnCert = Join-Path $rpcnDir 'cert.pem'
 $rpcnKey = Join-Path $rpcnDir 'key.pem'
 $requiredRpcnVersion = '1.10.0'
+$logDir = Join-Path $PSScriptRoot 'logs'
+New-Item -ItemType Directory -Path $logDir -Force | Out-Null
+$backendOutLog = Join-Path $logDir 'backend.out.log'
+$backendErrLog = Join-Path $logDir 'backend.err.log'
+$rpcnOutLog = Join-Path $logDir 'rpcn.out.log'
+$rpcnErrLog = Join-Path $logDir 'rpcn.err.log'
 
 Write-Host '=== PATRAS1993 HOST ==='
 Write-Host "Katalog: $repo"
@@ -55,8 +61,8 @@ else {
 }
 
 if (-not (TcpPortOpen 443)) {
-    Write-Host 'Backend: uruchamianie na TCP 443...'
-    Start-Process -FilePath 'powershell.exe' -WorkingDirectory $repo -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',$backend
+    Write-Host 'Backend: uruchamianie w tle na TCP 443...'
+    Start-Process -FilePath 'powershell.exe' -WorkingDirectory $repo -WindowStyle Hidden -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',$backend -RedirectStandardOutput $backendOutLog -RedirectStandardError $backendErrLog
 }
 else {
     Write-Host 'Backend: TCP 443 juz dziala.'
@@ -70,8 +76,8 @@ if (-not $rpcnTcpBefore) {
         throw 'UDP 3657 jest juz zajety, ale TCP 31313 nie nasluchuje. Zamknij stary proces RPCN i uruchom Host ponownie.'
     }
 
-    Write-Host 'RPCN: uruchamianie TCP 31313 / UDP 3657...'
-    Start-Process -FilePath $rpcn -WorkingDirectory $rpcnDir -WindowStyle Normal
+    Write-Host 'RPCN: uruchamianie w tle TCP 31313 / UDP 3657...'
+    Start-Process -FilePath $rpcn -WorkingDirectory $rpcnDir -WindowStyle Hidden -RedirectStandardOutput $rpcnOutLog -RedirectStandardError $rpcnErrLog
 }
 else {
     Write-Host 'RPCN: TCP 31313 juz dziala.'
@@ -97,6 +103,8 @@ Write-Host ("RPCN TCP 31313: " + ($(if($rpcnTcp){'OK'}else{'BLAD'})))
 Write-Host ("RPCN UDP 3657 : " + ($(if($rpcnUdp){'OK'}else{'BLAD'})))
 Write-Host ''
 Write-Host 'Patras1993 Host zakonczyl start.'
+Write-Host 'Backend i RPCN dzialaja w tle bez dodatkowych okien.'
+Write-Host ('Logi: ' + $logDir)
 
 if (-not $https -or -not $rpcnTcp -or -not $rpcnUdp) {
     Write-Host 'UWAGA: jeden z wymaganych portow nie nasluchuje.'
