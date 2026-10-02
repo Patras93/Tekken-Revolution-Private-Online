@@ -30,9 +30,9 @@ if (-not (Test-Path -LiteralPath $marker)) {
 }
 
 $markerValue = (Get-Content -LiteralPath $marker -Raw).Trim()
-$supportedBuilds = @('0.0.43-20147-dfc0542a','0.0.43-20161')
+$supportedBuilds = @('0.0.43-20161-96ccd89c','0.0.43-20147-dfc0542a')
 if ($supportedBuilds -notcontains $markerValue) {
-    throw "Nieobslugiwany build RPCS3: $markerValue. Obslugiwane: 20147 stable albo 20161 test candidate."
+    throw "Nieobslugiwany build RPCS3: $markerValue. Preferowany: 20161-96ccd89c; fallback: 20147-dfc0542a."
 }
 if ($expectedBuild -and $markerValue -ne $expectedBuild) {
     Write-Host "UWAGA: konfiguracja zapisala $expectedBuild, a wykryty marker to $markerValue."
