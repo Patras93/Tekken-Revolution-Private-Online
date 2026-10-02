@@ -9,11 +9,44 @@ $rpcnVersionFile = Join-Path $rpcnDir 'rpcn_version.txt'
 $envFile = Join-Path $backendDir 'server_cert_thumbprint.txt'
 $hookSource = Join-Path $backendDir 'version.dll.original'
 $hostConfigFile = Join-Path $root 'host_config.json'
+$noBtbConfigFile = Join-Path $root 'no_btb_config.json'
+$noBtbMode = Test-Path -LiteralPath $noBtbConfigFile
 $preferredRpcs3 = 'E:\instalacje gier\rpcs3-v0.0.43-20146-4d88114c_win64\rpcs3.exe'
 
 $requiredRpcnVersion = '1.10.0'
 $rpcnZipUrl = 'https://github.com/RipleyTom/rpcn/releases/download/1.10.0/rpcn-win.zip'
 $rpcnZipSha256 = '439e4f08bd8485194b36fb33b6da86a21a97adda56c968c75872918cf64ea663'
+
+
+function Get-RpcnActualVersion {
+    param([Parameter(Mandatory=$true)][string]$Path)
+
+    if (-not (Test-Path -LiteralPath $Path)) { return $null }
+
+    $tmp = Join-Path $env:TEMP ('Patras1993-RPCN-Version-' + [guid]::NewGuid().ToString('N'))
+    $out = Join-Path $tmp 'stdout.txt'
+    $err = Join-Path $tmp 'stderr.txt'
+    New-Item -ItemType Directory -Path $tmp -Force | Out-Null
+
+    try {
+        $p = Start-Process -FilePath $Path -WorkingDirectory $tmp -ArgumentList '--cert-gen' -PassThru -WindowStyle Hidden -RedirectStandardOutput $out -RedirectStandardError $err
+        if (-not $p.WaitForExit(8000)) {
+            try { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue } catch {}
+        }
+
+        $text = ''
+        if (Test-Path -LiteralPath $out) { $text += [IO.File]::ReadAllText($out) }
+        if (Test-Path -LiteralPath $err) { $text += [Environment]::NewLine + [IO.File]::ReadAllText($err) }
+
+        $m = [regex]::Match($text, 'RPCN\s+v(?<v>[0-9]+\.[0-9]+\.[0-9]+)', 'IgnoreCase')
+        if ($m.Success) { return $m.Groups['v'].Value }
+
+        return $null
+    }
+    finally {
+        Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
+    }
+}
 
 function Install-Rpcn1100 {
     Write-Host "RPCN: instalacja wersji $requiredRpcnVersion (protocol 32)."
@@ -65,24 +98,32 @@ function Install-Rpcn1100 {
     if (-not (Test-Path -LiteralPath $rpcnExe)) {
         throw 'Brak rpcn.exe po instalacji.'
     }
-    if ((Get-Content -LiteralPath $rpcnVersionFile -Raw).Trim() -ne $requiredRpcnVersion) {
-        throw 'Nie udalo sie zapisac informacji o wersji RPCN.'
+    $actualAfterInstall = Get-RpcnActualVersion -Path $rpcnExe
+    if ($actualAfterInstall -ne $requiredRpcnVersion) {
+        throw "Po instalacji wykryto RPCN v$actualAfterInstall zamiast v$requiredRpcnVersion."
     }
 
-    Write-Host "RPCN: $requiredRpcnVersion gotowy (protocol 32)."
+    [IO.File]::WriteAllText($rpcnVersionFile, $actualAfterInstall, [Text.UTF8Encoding]::new($false))
+    Write-Host "RPCN: rzeczywista wersja $actualAfterInstall gotowa (protocol 32)."
 }
 
-$currentRpcn = $null
+$markerRpcn = $null
 if (Test-Path -LiteralPath $rpcnVersionFile) {
-    $currentRpcn = (Get-Content -LiteralPath $rpcnVersionFile -Raw).Trim()
+    $markerRpcn = (Get-Content -LiteralPath $rpcnVersionFile -Raw).Trim()
 }
 
-if (-not (Test-Path -LiteralPath $rpcnExe) -or $currentRpcn -ne $requiredRpcnVersion) {
-    Write-Host "RPCN: zapis wersji: $currentRpcn"
+$actualRpcn = Get-RpcnActualVersion -Path $rpcnExe
+Write-Host "RPCN marker: $markerRpcn"
+Write-Host "RPCN rzeczywisty: $actualRpcn"
+
+if (-not (Test-Path -LiteralPath $rpcnExe) -or $actualRpcn -ne $requiredRpcnVersion) {
+    Write-Host "RPCN: wymagana naprawa do v$requiredRpcnVersion (protocol 32)."
     Install-Rpcn1100
+    $actualRpcn = Get-RpcnActualVersion -Path $rpcnExe
 }
 else {
-    Write-Host "RPCN: $currentRpcn OK (protocol 32)."
+    [IO.File]::WriteAllText($rpcnVersionFile, $actualRpcn, [Text.UTF8Encoding]::new($false))
+    Write-Host "RPCN: rzeczywista wersja $actualRpcn OK (protocol 32)."
 }
 
 
@@ -275,12 +316,17 @@ $hostsBackup = "$hostsPath.patras1993.bak"
 $currentHostLines = [IO.File]::ReadAllLines($hostsPath)
 $filteredHostLines = @(
     $currentHostLines |
-        Where-Object { $_ -notmatch '(?i)\s+(patch|rpcn)\.tekkenbtb\.online\s*$' }
+        Where-Object {
+            $_ -notmatch '(?i)\s+(patch|rpcn)\.tekkenbtb\.online\s*$' -and
+            $_ -notmatch '(?i)\s+(patch|rpcn)\.patras93\.invalid\s*$'
+        }
 )
 
 $desiredHostLines = @($filteredHostLines)
-$desiredHostLines += '127.0.0.1 patch.tekkenbtb.online'
-$desiredHostLines += '127.0.0.1 rpcn.tekkenbtb.online'
+if (-not $noBtbMode) {
+    $desiredHostLines += '127.0.0.1 patch.tekkenbtb.online'
+    $desiredHostLines += '127.0.0.1 rpcn.tekkenbtb.online'
+}
 
 $currentText = ($currentHostLines -join [Environment]::NewLine).TrimEnd()
 $desiredText = ($desiredHostLines -join [Environment]::NewLine).TrimEnd()
@@ -301,59 +347,71 @@ if ($currentText -ne $desiredText) {
     }
 
     ipconfig /flushdns | Out-Null
+}
+
+if ($noBtbMode) {
+    Write-Host 'NO-BTB: zachowano brak domen BTB w HOSTS.'
+    if (-not (Test-Path -LiteralPath $envFile)) {
+        Write-Host 'NO-BTB: brak server_cert_thumbprint.txt; backend utworzy certyfikat przy kolejnym pelnym setupie legacy.'
+    }
+}
+else {
     Write-Host 'HOSTS: patch/rpcn.tekkenbtb.online -> 127.0.0.1'
-}
-else {
-    Write-Host 'HOSTS: wpisy Patras1993 juz sa poprawne.'
-}
-$subject = 'CN=patch.tekkenbtb.online'
-$cert = Get-ChildItem 'Cert:\CurrentUser\My' |
-    Where-Object {
-        $_.Subject -eq $subject -and
-        $_.HasPrivateKey -and
-        $_.NotAfter -gt (Get-Date)
-    } |
-    Sort-Object NotAfter -Descending |
-    Select-Object -First 1
 
-if (-not $cert) {
-    $certParams = @{
-        DnsName = 'patch.tekkenbtb.online'
-        CertStoreLocation = 'Cert:\CurrentUser\My'
-        FriendlyName = 'Patras1993 Tekken Revolution Backend'
-        NotAfter = (Get-Date).AddYears(5)
+    $subject = 'CN=patch.tekkenbtb.online'
+    $cert = Get-ChildItem 'Cert:\CurrentUser\My' |
+        Where-Object {
+            $_.Subject -eq $subject -and
+            $_.HasPrivateKey -and
+            $_.NotAfter -gt (Get-Date)
+        } |
+        Sort-Object NotAfter -Descending |
+        Select-Object -First 1
+
+    if (-not $cert) {
+        $certParams = @{
+            DnsName = 'patch.tekkenbtb.online'
+            CertStoreLocation = 'Cert:\CurrentUser\My'
+            FriendlyName = 'Patras1993 Tekken Revolution Backend'
+            NotAfter = (Get-Date).AddYears(5)
+        }
+        $cert = New-SelfSignedCertificate @certParams
     }
-    $cert = New-SelfSignedCertificate @certParams
-}
 
-$thumb = $cert.Thumbprint.ToUpperInvariant()
-[IO.File]::WriteAllText($envFile, $thumb, (New-Object System.Text.UTF8Encoding($false)))
+    $thumb = $cert.Thumbprint.ToUpperInvariant()
+    [IO.File]::WriteAllText($envFile, $thumb, (New-Object System.Text.UTF8Encoding($false)))
 
-$trusted = Get-ChildItem 'Cert:\CurrentUser\Root' |
-    Where-Object { $_.Thumbprint -eq $thumb } |
-    Select-Object -First 1
+    $trusted = Get-ChildItem 'Cert:\CurrentUser\Root' |
+        Where-Object { $_.Thumbprint -eq $thumb } |
+        Select-Object -First 1
 
-if (-not $trusted) {
-    $tmpCert = Join-Path $env:TEMP 'patras1993-backend.cer'
-    try {
-        Export-Certificate -Cert $cert -FilePath $tmpCert -Force | Out-Null
-        Import-Certificate -FilePath $tmpCert -CertStoreLocation 'Cert:\CurrentUser\Root' | Out-Null
-        Write-Host 'Certyfikat backendu: dodany do zaufanych glownych urzedow biezacego uzytkownika.'
+    if (-not $trusted) {
+        $tmpCert = Join-Path $env:TEMP 'patras1993-backend.cer'
+        try {
+            Export-Certificate -Cert $cert -FilePath $tmpCert -Force | Out-Null
+            Import-Certificate -FilePath $tmpCert -CertStoreLocation 'Cert:\CurrentUser\Root' | Out-Null
+            Write-Host 'Certyfikat backendu: dodany do zaufanych glownych urzedow biezacego uzytkownika.'
+        }
+        finally {
+            Remove-Item -LiteralPath $tmpCert -Force -ErrorAction SilentlyContinue
+        }
     }
-    finally {
-        Remove-Item -LiteralPath $tmpCert -Force -ErrorAction SilentlyContinue
+    else {
+        Write-Host 'Certyfikat backendu: juz zaufany.'
     }
-}
-else {
-    Write-Host 'Certyfikat backendu: juz zaufany.'
 }
 
 New-NetFirewallRule -DisplayName 'Patras1993 Tekken Revolution HTTPS' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 443 -Profile Any -ErrorAction SilentlyContinue | Out-Null
 New-NetFirewallRule -DisplayName 'Patras1993 RPCN TCP' -Direction Inbound -Action Allow -Protocol TCP -LocalPort 31313 -Profile Any -ErrorAction SilentlyContinue | Out-Null
 New-NetFirewallRule -DisplayName 'Patras1993 RPCN UDP' -Direction Inbound -Action Allow -Protocol UDP -LocalPort 3657 -Profile Any -ErrorAction SilentlyContinue | Out-Null
 
-Write-Host "Certyfikat: $thumb"
-Write-Host "Plik certyfikatu: $envFile"
+if ($noBtbMode) {
+    Write-Host 'Certyfikat backendu: pozostawiony bez zmian (NO-BTB).'
+}
+else {
+    Write-Host "Certyfikat: $thumb"
+    Write-Host "Plik certyfikatu: $envFile"
+}
 Write-Host 'TCP 443: OK'
 Write-Host 'TCP 31313: OK'
 Write-Host 'UDP 3657: OK'
