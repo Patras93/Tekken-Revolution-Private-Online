@@ -1,4 +1,4 @@
-TEKKEN REVOLUTION PRIVATE ONLINE - PATRAS1993 v2.0
+TEKKEN REVOLUTION PRIVATE ONLINE - PATRAS1993 v2.1
 
 ========================================
 CEL
@@ -64,7 +64,25 @@ Setup:
 - tworzy/wybiera lokalny certyfikat backendu,
 - otwiera TCP 443,
 - otwiera TCP 31313,
-- otwiera UDP 3657.
+- otwiera UDP 3657,
+- ignoruje Kosz i katalogi systemowe przy wykrywaniu RPCS3,
+- wybiera tylko instalacje RPCS3 zawierajaca NPUB31250.
+
+Aktualny zestaw Host:
+- Setup Patras1993 Host.cmd/.ps1,
+- Start Patras1993 Host.cmd/.ps1,
+- Start Patras1993 Host Silent.cmd,
+- Stop Patras1993 Host.cmd/.ps1,
+- Diagnose Patras1993.cmd/.ps1,
+- Private Match ON.cmd,
+- Private Match OFF.cmd,
+- Set Private Match Rules.ps1.
+
+Usuniete jako przestarzale:
+- osobne Practice Online Health ON/OFF,
+- osobne P1 Health Shield ON/OFF,
+- skaner P1 Health,
+- narzedzia testowe Decrypt Revolution EBOOT.
 
 ========================================
 GUEST
@@ -76,8 +94,17 @@ GUEST
    jako administrator.
 3. Podaj adres Tailscale hosta.
 4. Skrypt wykryje RPCS3 i zapisze jego ścieżkę.
-5. Uruchom:
+5. Przed uruchomieniem gry zamknij RPCS3 i wlacz:
+   Guest\Private Match ON.cmd
+6. Uruchom:
    Guest\Start Online Guest.cmd
+
+Private Match jest wspolnym presetem dla obu graczy:
+- HP obu graczy nie spada,
+- czas rundy jest nieskonczony,
+- wygrana meczu wymaga 5 rund,
+- maksymalnie 9 rund,
+- Final Round przy 4:4.
 
 ========================================
 RPCS3
@@ -93,7 +120,7 @@ Gra:
 dev_hdd0\game\NPUB31250
 
 ========================================
-STATUS v2.0
+STATUS v2.1
 ========================================
 
 Gotowe:
@@ -129,3 +156,14 @@ POTWIERDZONE 2026-10-01
 RPCN 1.10.0 / protocol 32: POTWIERDZONE.
 RPCS3: konto RPCN prawidlowe na lokalnym serwerze Patras1993.
 TCP 31313 i UDP 3657: nasluchuja.
+
+
+========================================
+AKTUALIZACJA 2026-10-02
+========================================
+
+Host zostal uproszczony do jednego presetu Private Match.
+Stare osobne przelaczniki zdrowia zostaly usuniete.
+Host Start pokazuje adres Tailscale IPv4.
+Host Diagnose sprawdza Tailscale, nasluch RPCN TCP 31313 i regule Windows Firewall.
+Eksperymentalny P1 Health Shield zostal usuniety z patcha.
