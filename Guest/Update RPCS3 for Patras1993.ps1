@@ -1,16 +1,14 @@
 $ErrorActionPreference = 'Stop'
 
 Write-Host ''
-Write-Host 'PATRAS1993 - RPCS3 GUEST VERSION HELPER'
-Write-Host 'Stable fallback: RPCS3 0.0.43-20147-dfc0542a'
-Write-Host 'Test candidate: RPCS3 0.0.43-20161'
+Write-Host 'PATRAS1993 - RPCS3 GUEST UPDATER'
+Write-Host 'Preferred verified build: RPCS3 0.0.43-20161-96ccd89c'
+Write-Host 'Fallback supported: RPCS3 0.0.43-20147-dfc0542a'
 Write-Host ''
 
-$stableBuild = '0.0.43-20147-dfc0542a'
-$candidateBuild = '0.0.43-20161'
-$expectedBuild = $stableBuild
-$archiveUrl = 'https://github.com/RPCS3/rpcs3-binaries-win/releases/download/build-dfc0542a9fbf9a23b0b8aa526ff0e8430127719f/rpcs3-v0.0.43-20147-dfc0542a_win64_msvc.7z'
-$archiveSha256 = '94d1c1cb3109cfc9288d7c85ef4277e7cad62b3db514f3e075713f7056f13196'
+$expectedBuild = '0.0.43-20161-96ccd89c'
+$archiveUrl = 'https://github.com/RPCS3/rpcs3-binaries-win/releases/download/build-96ccd89cd6931c32e66ef5c5e4f823e210c24c15/rpcs3-v0.0.43-20161-96ccd89c_win64_msvc.7z'
+$archiveSha256 = '847f25f4b689797e26a63277782b4f9b13b64028eeae1d0f2448b91af8f0ccbb'
 
 $preferred = 'E:\instalacje gier\rpcs3-v0.0.43-20146-4d88114c_win64\rpcs3.exe'
 $candidates = @(
@@ -71,14 +69,27 @@ $game = Join-Path $rpcs3Dir 'dev_hdd0\game\NPUB31250\USRDIR\EBOOT.BIN'
 Write-Host "RPCS3: $rpcs3Dir"
 Write-Host 'Gra NPUB31250: OK'
 
-$versionInfo = (Get-Item -LiteralPath $rpcs3Exe).VersionInfo
-$combinedVersion = "$($versionInfo.FileVersion) $($versionInfo.ProductVersion)"
-if ($combinedVersion -like '*20161*') {
-    [IO.File]::WriteAllText((Join-Path $rpcs3Dir 'patras1993_rpc3_build.txt'), $candidateBuild, (New-Object System.Text.UTF8Encoding($false)))
+$versionEvidence = ''
+try {
+    $versionInfo = (Get-Item -LiteralPath $rpcs3Exe).VersionInfo
+    $versionEvidence += "$($versionInfo.FileVersion) $($versionInfo.ProductVersion)"
+} catch {}
+
+$logPath = Join-Path $rpcs3Dir 'RPCS3.log'
+if (Test-Path -LiteralPath $logPath) {
+    try { $versionEvidence += [Environment]::NewLine + (Get-Content -LiteralPath $logPath -Raw -ErrorAction Stop) } catch {}
+}
+
+$markerPath = Join-Path $rpcs3Dir 'patras1993_rpc3_build.txt'
+if (Test-Path -LiteralPath $markerPath) {
+    try { $versionEvidence += [Environment]::NewLine + (Get-Content -LiteralPath $markerPath -Raw -ErrorAction Stop) } catch {}
+}
+
+if ($versionEvidence -match '0\.0\.43-20161-96ccd89c|20161-96ccd89c') {
+    [IO.File]::WriteAllText($markerPath, $expectedBuild, (New-Object System.Text.UTF8Encoding($false)))
     Write-Host ''
-    Write-Host 'RPCS3 0.0.43-20161 jest juz zainstalowany.'
-    Write-Host 'Status: TEST CANDIDATE. Nie cofam automatycznie do 20147.'
-    Write-Host 'Jesli test nie przejdzie, uzyj kopii rpcs3_old albo tego helpera po usunieciu/zmianie aktualnej wersji.'
+    Write-Host 'RPCS3 0.0.43-20161-96ccd89c jest juz zainstalowany.'
+    Write-Host 'Status: VERIFIED STABLE FOR PATRAS1993 v2.1.1.'
     exit 0
 }
 
@@ -96,7 +107,7 @@ New-Item -ItemType Directory -Path $extract -Force | Out-Null
 
 try {
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    Write-Host 'Przywracanie stabilnego RPCS3 20147-dfc0542a...'
+    Write-Host 'Pobieranie sprawdzonego RPCS3 20161-96ccd89c...'
     Invoke-WebRequest -Uri $archiveUrl -OutFile $archive -UseBasicParsing
 
     $hash = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
@@ -140,7 +151,7 @@ try {
     }
 
     Write-Host ''
-    Write-Host 'RPCS3 0.0.43-20147-dfc0542a STABLE FALLBACK GOTOWY.'
+    Write-Host 'RPCS3 0.0.43-20161-96ccd89c GOTOWY.'
     Write-Host 'Tekken Revolution i dane dev_hdd0 pozostaly na miejscu.'
 }
 finally {
