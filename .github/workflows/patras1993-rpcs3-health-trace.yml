@@ -1,13 +1,7 @@
-name: Build Patras1993 RPCS3 HP Trace
+name: Build Patras1993 RPCS3 Candidate Trace (manual)
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - patras1993-independent-server
-    paths:
-      - ".github/workflows/patras1993-rpcs3-health-trace.yml"
-      - "diagnostics/rpcs3-health-trace/**"
 
 permissions:
   contents: read
