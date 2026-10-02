@@ -1,7 +1,6 @@
 $ErrorActionPreference = 'Stop'
 
 $repo = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-$backend = Join-Path $repo 'local_backend\server.ps1'
 $rpcnDir = Join-Path $repo 'local_rpcn'
 $rpcn = Join-Path $rpcnDir 'rpcn.exe'
 $rpcnVersionFile = Join-Path $rpcnDir 'rpcn_version.txt'
@@ -10,175 +9,83 @@ $rpcnKey = Join-Path $rpcnDir 'key.pem'
 $requiredRpcnVersion = '1.10.0'
 $logDir = Join-Path $PSScriptRoot 'logs'
 New-Item -ItemType Directory -Path $logDir -Force | Out-Null
-$backendOutLog = Join-Path $logDir 'backend.out.log'
-$backendErrLog = Join-Path $logDir 'backend.err.log'
 $rpcnOutLog = Join-Path $logDir 'rpcn.out.log'
 $rpcnErrLog = Join-Path $logDir 'rpcn.err.log'
 
-
 function Get-RpcnActualVersion {
     param([Parameter(Mandatory=$true)][string]$Path)
-
     if (-not (Test-Path -LiteralPath $Path)) { return $null }
-
-    $tmp = Join-Path $env:TEMP ('Patras1993-RPCN-Version-' + [guid]::NewGuid().ToString('N'))
-    $out = Join-Path $tmp 'stdout.txt'
-    $err = Join-Path $tmp 'stderr.txt'
+    $tmp=Join-Path $env:TEMP ('Patras1993-RPCN-Version-'+[guid]::NewGuid().ToString('N'))
+    $out=Join-Path $tmp 'stdout.txt'; $err=Join-Path $tmp 'stderr.txt'
     New-Item -ItemType Directory -Path $tmp -Force | Out-Null
-
     try {
-        $p = Start-Process -FilePath $Path -WorkingDirectory $tmp -ArgumentList '--cert-gen' -PassThru -WindowStyle Hidden -RedirectStandardOutput $out -RedirectStandardError $err
-        if (-not $p.WaitForExit(8000)) {
-            try { Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue } catch {}
-        }
-
-        $text = ''
-        if (Test-Path -LiteralPath $out) { $text += [IO.File]::ReadAllText($out) }
-        if (Test-Path -LiteralPath $err) { $text += [Environment]::NewLine + [IO.File]::ReadAllText($err) }
-
-        $m = [regex]::Match($text, 'RPCN\s+v(?<v>[0-9]+\.[0-9]+\.[0-9]+)', 'IgnoreCase')
-        if ($m.Success) { return $m.Groups['v'].Value }
-
+        $p=Start-Process -FilePath $Path -WorkingDirectory $tmp -ArgumentList '--cert-gen' -PassThru -WindowStyle Hidden -RedirectStandardOutput $out -RedirectStandardError $err
+        if(-not $p.WaitForExit(8000)){try{Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue}catch{}}
+        $text=''
+        if(Test-Path $out){$text+=[IO.File]::ReadAllText($out)}
+        if(Test-Path $err){$text+=[Environment]::NewLine+[IO.File]::ReadAllText($err)}
+        $m=[regex]::Match($text,'RPCN\s+v(?<v>[0-9]+\.[0-9]+\.[0-9]+)','IgnoreCase')
+        if($m.Success){return $m.Groups['v'].Value}
         return $null
-    }
-    finally {
-        Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue
-    }
+    } finally { Remove-Item -LiteralPath $tmp -Recurse -Force -ErrorAction SilentlyContinue }
 }
-
-Write-Host '=== PATRAS1993 HOST ==='
-Write-Host "Katalog: $repo"
-
-$tailscaleCmd = Get-Command tailscale.exe -ErrorAction SilentlyContinue
-if ($tailscaleCmd) {
-    $tailscaleIp = (& $tailscaleCmd.Source ip -4 2>$null | Select-Object -First 1)
-    if ($tailscaleIp) {
-        Write-Host "Tailscale IPv4: $tailscaleIp"
-    }
-    else {
-        Write-Host 'Tailscale IPv4: BRAK - sprawdz logowanie/polaczenie Tailscale.'
-    }
-}
-else {
-    Write-Host 'Tailscale: nie znaleziono tailscale.exe.'
-}
-
-if (-not (Test-Path -LiteralPath $backend)) { throw "Brak: $backend" }
-if (-not (Test-Path -LiteralPath $rpcn)) { throw "Brak: $rpcn" }
-if (-not (Test-Path -LiteralPath $rpcnVersionFile)) {
-    throw 'Brak local_rpcn\rpcn_version.txt. Uruchom Host\Setup Patras1993 Host.cmd jako administrator.'
-}
-
-$rpcnVersionMarker = (Get-Content -LiteralPath $rpcnVersionFile -Raw).Trim()
-$rpcnActualVersion = Get-RpcnActualVersion -Path $rpcn
-
-if ($rpcnActualVersion -ne $requiredRpcnVersion) {
-    throw "RPCN rzeczywisty to v$rpcnActualVersion, a wymagany jest v$requiredRpcnVersion (protocol 32). Uruchom Host\Setup Patras1993 Host.cmd jako administrator."
-}
-if ($rpcnVersionMarker -ne $rpcnActualVersion) {
-    [IO.File]::WriteAllText($rpcnVersionFile, $rpcnActualVersion, [Text.UTF8Encoding]::new($false))
-}
-Write-Host "RPCN rzeczywista wersja: $rpcnActualVersion (protocol 32)"
 
 function TcpPortOpen([int]$Port) {
-    try {
-        return [bool](Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction Stop)
-    }
-    catch {
-        return $false
-    }
+    try { return [bool](Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction Stop) } catch { return $false }
 }
-
 function UdpPortOpen([int]$Port) {
-    try {
-        return [bool](Get-NetUDPEndpoint -LocalPort $Port -ErrorAction Stop)
-    }
-    catch {
-        return $false
-    }
+    try { return [bool](Get-NetUDPEndpoint -LocalPort $Port -ErrorAction Stop) } catch { return $false }
 }
 
-if (-not (Test-Path -LiteralPath $rpcnCert) -or -not (Test-Path -LiteralPath $rpcnKey)) {
-    Write-Host 'RPCN: brak cert.pem/key.pem - generowanie...'
-    $p = Start-Process -FilePath $rpcn -WorkingDirectory $rpcnDir -ArgumentList '--cert-gen' -Wait -PassThru -NoNewWindow
-    if ($p.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $rpcnCert) -or -not (Test-Path -LiteralPath $rpcnKey)) {
-        throw 'Nie udalo sie wygenerowac cert.pem/key.pem RPCN.'
-    }
-    Write-Host 'RPCN: certyfikat wygenerowany.'
+Write-Host '=== PATRAS1993 HOST v2.2.0 ==='
+Write-Host "Katalog: $repo"
+
+$tailscaleCmd=Get-Command tailscale.exe -ErrorAction SilentlyContinue
+if($tailscaleCmd){
+    $tailscaleIp=(& $tailscaleCmd.Source ip -4 2>$null | Select-Object -First 1)
+    if($tailscaleIp){Write-Host "Tailscale IPv4: $tailscaleIp"}else{Write-Host 'Tailscale IPv4: BRAK'}
+}else{Write-Host 'Tailscale: nie znaleziono tailscale.exe.'}
+
+if(-not(Test-Path -LiteralPath $rpcn)){throw "Brak: $rpcn"}
+$actual=Get-RpcnActualVersion -Path $rpcn
+if($actual -ne $requiredRpcnVersion){
+    throw "RPCN rzeczywisty to v$actual, wymagany v$requiredRpcnVersion. Uruchom Setup Patras1993 Host.cmd jako administrator."
 }
-else {
-    Write-Host 'RPCN: cert.pem/key.pem OK.'
+[IO.File]::WriteAllText($rpcnVersionFile,$actual,[Text.UTF8Encoding]::new($false))
+Write-Host "RPCN rzeczywista wersja: $actual (protocol 32)"
+
+if(-not(Test-Path $rpcnCert) -or -not(Test-Path $rpcnKey)){
+    Write-Host 'RPCN: generowanie cert.pem/key.pem...'
+    $p=Start-Process -FilePath $rpcn -WorkingDirectory $rpcnDir -ArgumentList '--cert-gen' -Wait -PassThru -NoNewWindow
+    if($p.ExitCode -ne 0 -or -not(Test-Path $rpcnCert) -or -not(Test-Path $rpcnKey)){throw 'Nie udalo sie wygenerowac certyfikatu RPCN.'}
 }
 
-if (-not (TcpPortOpen 443)) {
-    Write-Host 'Backend: uruchamianie w tle na TCP 443...'
-    Start-Process -FilePath 'powershell.exe' -WorkingDirectory $repo -WindowStyle Hidden -ArgumentList '-NoProfile','-ExecutionPolicy','Bypass','-File',$backend -RedirectStandardOutput $backendOutLog -RedirectStandardError $backendErrLog
-}
-else {
-    Write-Host 'Backend: TCP 443 juz dziala.'
-}
-
-$rpcnTcpBefore = TcpPortOpen 31313
-$rpcnUdpBefore = UdpPortOpen 3657
-
-if (-not $rpcnTcpBefore) {
-    if ($rpcnUdpBefore) {
-        throw 'UDP 3657 jest juz zajety, ale TCP 31313 nie nasluchuje. Zamknij stary proces RPCN i uruchom Host ponownie.'
-    }
-
-    Write-Host 'RPCN: uruchamianie w tle TCP 31313 / UDP 3657...'
+$tcp=TcpPortOpen 31313
+$udp=UdpPortOpen 3657
+if(-not $tcp){
+    if($udp){throw 'UDP 3657 jest zajety, ale TCP 31313 nie nasluchuje. Zatrzymaj stary RPCN.'}
+    Write-Host 'RPCN: uruchamianie TCP 31313 / UDP 3657...'
     Start-Process -FilePath $rpcn -WorkingDirectory $rpcnDir -WindowStyle Hidden -RedirectStandardOutput $rpcnOutLog -RedirectStandardError $rpcnErrLog
-}
-else {
+}else{
     Write-Host 'RPCN: TCP 31313 juz dziala.'
 }
 
-$deadline = (Get-Date).AddSeconds(15)
-while ((Get-Date) -lt $deadline) {
-    $https = TcpPortOpen 443
-    $rpcnTcp = TcpPortOpen 31313
-    $rpcnUdp = UdpPortOpen 3657
-    if ($https -and $rpcnTcp -and $rpcnUdp) { break }
+$deadline=(Get-Date).AddSeconds(15)
+while((Get-Date)-lt $deadline){
+    $tcp=TcpPortOpen 31313; $udp=UdpPortOpen 3657
+    if($tcp -and $udp){break}
     Start-Sleep -Milliseconds 250
 }
 
-$https = TcpPortOpen 443
-$rpcnTcp = TcpPortOpen 31313
-$rpcnUdp = UdpPortOpen 3657
-
+$tcp=TcpPortOpen 31313; $udp=UdpPortOpen 3657
 Write-Host ''
 Write-Host '=== STATUS ==='
-Write-Host ("HTTPS TCP 443 : " + ($(if($https){'OK'}else{'BLAD'})))
-Write-Host ("RPCN TCP 31313: " + ($(if($rpcnTcp){'OK'}else{'BLAD'})))
-Write-Host ("RPCN UDP 3657 : " + ($(if($rpcnUdp){'OK'}else{'BLAD'})))
+Write-Host ('RPCN TCP 31313: '+$(if($tcp){'OK'}else{'BLAD'}))
+Write-Host ('RPCN UDP 3657 : '+$(if($udp){'OK'}else{'BLAD'}))
+Write-Host 'Backend HTTPS 443: NIEPOTRZEBNY'
 Write-Host ''
-Write-Host 'Patras1993 Host zakonczyl start.'
-Write-Host 'Backend i RPCN dzialaja w tle bez dodatkowych okien.'
-Write-Host ('Logi: ' + $logDir)
+Write-Host 'Patras1993 Host v2.2.0 uruchomiony.'
+Write-Host 'Architektura: RPCN DIRECT + Tailscale.'
+Write-Host ('Logi: '+$logDir)
 
-if (-not $https -or -not $rpcnTcp -or -not $rpcnUdp) {
-    Write-Host 'UWAGA: jeden z wymaganych portow nie nasluchuje.'
-
-    if (-not $https) {
-        Write-Host ''
-        Write-Host '=== BACKEND ERROR ==='
-        if (Test-Path -LiteralPath $backendErrLog) {
-            $err = Get-Content -LiteralPath $backendErrLog -Tail 20 -ErrorAction SilentlyContinue
-            if ($err) { $err | ForEach-Object { Write-Host $_ } }
-            else { Write-Host 'backend.err.log jest pusty.' }
-        }
-        else {
-            Write-Host 'Brak backend.err.log.'
-        }
-
-        $backendInternalLog = Join-Path (Split-Path -Parent $backend) 'server.log'
-        if (Test-Path -LiteralPath $backendInternalLog) {
-            Write-Host ''
-            Write-Host '=== BACKEND SERVER.LOG ==='
-            Get-Content -LiteralPath $backendInternalLog -Tail 20 -ErrorAction SilentlyContinue |
-                ForEach-Object { Write-Host $_ }
-        }
-    }
-
-    exit 2
-}
+if(-not $tcp -or -not $udp){exit 2}
