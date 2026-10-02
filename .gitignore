@@ -7,3 +7,6 @@ local_rpcn/*.sqlite3
 local_rpcn/cert.pem
 local_rpcn/key.pem
 local_rpcn/rpcn.exe.before-*.bak
+local_rpcn/db/
+local_rpcn/tus_data/
+local_backend/server.log
