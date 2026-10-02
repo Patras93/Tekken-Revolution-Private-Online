@@ -1,0 +1,11 @@
+Backups/
+Host/host_config.json
+Host/logs/
+local_rpcn/*.db
+local_rpcn/*.sqlite
+local_rpcn/*.sqlite3
+local_rpcn/cert.pem
+local_rpcn/key.pem
+local_rpcn/rpcn_version.txt
+local_rpcn/rpcn.exe.before-*.bak
+local_backend/server_cert_thumbprint.txt
