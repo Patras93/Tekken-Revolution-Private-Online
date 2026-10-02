@@ -59,7 +59,9 @@ try {
 
         $home = Join-Path $rpcs3Dir 'dev_hdd0\home'
         if (Test-Path -LiteralPath $home) {
-            Copy-Item -LiteralPath $home -Destination (Join-Path $rpcs3Backup 'dev_hdd0\home') -Recurse -Force
+            $homeParent = Join-Path $rpcs3Backup 'dev_hdd0'
+            New-Item -ItemType Directory -Path $homeParent -Force | Out-Null
+            Copy-Item -LiteralPath $home -Destination $homeParent -Recurse -Force
         }
     }
 
