@@ -482,3 +482,21 @@ PPU-1504b75ba97abccdf2d0a93dd93aaff10591a01e:
       - [ be32, 0x0028C008, 0x38000009 ]
       - [ be32, 0x00293758, 0x38000009 ]
       - [ be32, 0x0029B848, 0x38000009 ]
+
+  "Patras1993 P1 Health Shield - Experimental":
+    Games:
+      "TEKKEN REVOLUTION":
+        NPUB31250: [ 01.05 ]
+    Author: "Patras1993 private practice"
+    Patch Version: 0.1.0
+    Group: ""
+    Notes: "Experimental P1-only health shield. Hooks the confirmed health damage routine and skips damage only when the health object is P1 at 0x012D9F5C. P2 keeps normal damage. Test offline first before online use."
+    Patch:
+      - [ be32, 0x00420A80, 0x48AA2DA0 ]
+      - [ be32, 0x00EC3820, 0x3D80012D ]
+      - [ be32, 0x00EC3824, 0x618C9F5C ]
+      - [ be32, 0x00EC3828, 0x7FA36040 ]
+      - [ be32, 0x00EC382C, 0x419E000C ]
+      - [ be32, 0x00EC3830, 0x80030004 ]
+      - [ be32, 0x00EC3834, 0x4B55D250 ]
+      - [ be32, 0x00EC3838, 0x4E800020 ]
