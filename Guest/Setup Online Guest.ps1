@@ -4,9 +4,9 @@ Write-Host ''
 Write-Host 'PATRAS1993 - TEKKEN REVOLUTION ONLINE GUEST'
 Write-Host ''
 
-$stableBuild = '0.0.43-20147-dfc0542a'
-$candidateBuild = '0.0.43-20161'
-$acceptedBuilds = @($stableBuild, $candidateBuild)
+$preferredBuild = '0.0.43-20161-96ccd89c'
+$fallbackBuild = '0.0.43-20147-dfc0542a'
+$acceptedBuilds = @($preferredBuild, $fallbackBuild)
 $nativePatchSource = Join-Path $PSScriptRoot 'Patras1993_NPUB31250_patch.yml'
 
 $hostIp = Read-Host 'Podaj adres Tailscale hosta Patras1993 (100.x.x.x)'
@@ -77,53 +77,100 @@ $buildOk = $false
 $detectedBuild = $null
 $buildMarker = Join-Path $rpcs3 'patras1993_rpc3_build.txt'
 
-# Najpierw wykryj aktualny build z VersionInfo, potem z logu i markera.
-$versionInfo = (Get-Item -LiteralPath $rpcs3Exe).VersionInfo
-$combinedVersion = "$($versionInfo.FileVersion) $($versionInfo.ProductVersion)"
+function Get-GzipText([string]$Path) {
+    try {
+        $fs = [IO.File]::OpenRead($Path)
+        try {
+            $gz = New-Object IO.Compression.GZipStream($fs,[IO.Compression.CompressionMode]::Decompress)
+            try {
+                $sr = New-Object IO.StreamReader($gz)
+                try { return $sr.ReadToEnd() }
+                finally { $sr.Dispose() }
+            }
+            finally { $gz.Dispose() }
+        }
+        finally { $fs.Dispose() }
+    }
+    catch { return '' }
+}
 
-if ($combinedVersion -like '*20161*') {
-    $detectedBuild = $candidateBuild
+function Get-VersionEvidence {
+    $parts = New-Object 'System.Collections.Generic.List[string]'
+
+    try {
+        $vi = (Get-Item -LiteralPath $rpcs3Exe).VersionInfo
+        [void]$parts.Add([string]$vi.FileVersion)
+        [void]$parts.Add([string]$vi.ProductVersion)
+    } catch {}
+
+    $p = Get-Process rpcs3 -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($p -and $p.MainWindowTitle) {
+        [void]$parts.Add([string]$p.MainWindowTitle)
+    }
+
+    $rawLog = Join-Path $rpcs3 'RPCS3.log'
+    if (Test-Path -LiteralPath $rawLog) {
+        try { [void]$parts.Add((Get-Content -LiteralPath $rawLog -Raw -ErrorAction Stop)) } catch {}
+    }
+
+    $gzLog = Join-Path $rpcs3 'RPCS3.log.gz'
+    if (Test-Path -LiteralPath $gzLog) {
+        $gzText = Get-GzipText $gzLog
+        if ($gzText) { [void]$parts.Add($gzText) }
+    }
+
+    if (Test-Path -LiteralPath $buildMarker) {
+        try { [void]$parts.Add((Get-Content -LiteralPath $buildMarker -Raw -ErrorAction Stop)) } catch {}
+    }
+
+    return ($parts -join [Environment]::NewLine)
+}
+
+$evidence = Get-VersionEvidence
+if ($evidence -match '0\.0\.43-20161-96ccd89c|20161-96ccd89c') {
+    $detectedBuild = $preferredBuild
     $buildOk = $true
 }
-elseif ($combinedVersion -like '*20147*' -and $combinedVersion -like '*dfc0542a*') {
-    $detectedBuild = $stableBuild
+elseif ($evidence -match '0\.0\.43-20147-dfc0542a|20147-dfc0542a') {
+    $detectedBuild = $fallbackBuild
     $buildOk = $true
 }
 
 if (-not $buildOk) {
-    $logPath = Join-Path $rpcs3 'RPCS3.log'
-    if (Test-Path -LiteralPath $logPath) {
-        $firstLine = Get-Content -LiteralPath $logPath -TotalCount 1
-        if ($firstLine -like '*20161*') {
-            $detectedBuild = $candidateBuild
-            $buildOk = $true
-        }
-        elseif ($firstLine -like '*20147*' -and $firstLine -like '*dfc0542a*') {
-            $detectedBuild = $stableBuild
-            $buildOk = $true
-        }
+    $startedForCheck = $false
+    if (-not (Get-Process rpcs3 -ErrorAction SilentlyContinue)) {
+        Write-Host 'Sprawdzanie wersji RPCS3...'
+        Start-Process -FilePath $rpcs3Exe -WorkingDirectory $rpcs3 | Out-Null
+        $startedForCheck = $true
+        Start-Sleep -Seconds 3
     }
-}
 
-if (-not $buildOk -and (Test-Path -LiteralPath $buildMarker)) {
-    $markerValue = (Get-Content -LiteralPath $buildMarker -Raw).Trim()
-    if ($acceptedBuilds -contains $markerValue) {
-        $detectedBuild = $markerValue
+    $evidence = Get-VersionEvidence
+    if ($evidence -match '0\.0\.43-20161-96ccd89c|20161-96ccd89c') {
+        $detectedBuild = $preferredBuild
         $buildOk = $true
     }
+    elseif ($evidence -match '0\.0\.43-20147-dfc0542a|20147-dfc0542a') {
+        $detectedBuild = $fallbackBuild
+        $buildOk = $true
+    }
+
+    if ($startedForCheck) {
+        Get-Process rpcs3 -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+    }
 }
 
 if (-not $buildOk) {
-    throw 'RPCS3 nie jest obslugiwanym buildem. Dopuszczone: 20147-dfc0542a (stable) albo 20161 (test candidate).'
+    throw 'Nieobslugiwany build RPCS3. Uruchom Guest\Update RPCS3 for Patras1993.cmd. Preferowany: 20161-96ccd89c; fallback: 20147-dfc0542a.'
 }
 
 [IO.File]::WriteAllText($buildMarker, $detectedBuild, (New-Object System.Text.UTF8Encoding($false)))
 
-if ($detectedBuild -eq $candidateBuild) {
-    Write-Host "RPCS3 build: $detectedBuild TEST CANDIDATE"
+if ($detectedBuild -eq $preferredBuild) {
+    Write-Host "RPCS3 build: $detectedBuild VERIFIED"
 }
 else {
-    Write-Host "RPCS3 build: $detectedBuild STABLE"
+    Write-Host "RPCS3 build: $detectedBuild FALLBACK"
 }
 
 if (-not (Test-Path -LiteralPath $nativePatchSource)) {
