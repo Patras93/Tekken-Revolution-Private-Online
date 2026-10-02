@@ -124,7 +124,7 @@ try {
     Write-Host ('P1 block: 0x{0:X} - 0x{1:X}' -f $p1Base,($p1Base+[uint64]$scanSize-1))
     Write-Host ('P2 block: 0x{0:X} - 0x{1:X}' -f $p2Base,($p2Base+[uint64]$scanSize-1))
     Write-Host ''
-    Write-Host 'WAŻNE: w czasie pomiaru nie zmieniaj postaci.'
+    Write-Host 'WAZNE: w czasie pomiaru nie zmieniaj postaci.'
     Write-Host ''
 
     Write-Host 'KROK 1 z 4 - PELNE ZYCIE.'
@@ -153,6 +153,26 @@ try {
     Read-Host 'Gdy P2 straci wyrazna czesc zycia, nacisnij ENTER'
     $p1WhileP2Damaged = Read-Block $handle $p1Base $scanSize
     $p2Damaged = Read-Block $handle $p2Base $scanSize
+
+    # Save all raw measurements BEFORE candidate processing.
+    # If later analysis fails, the four-step test does not need to be repeated.
+    $outDir = Join-Path $PSScriptRoot 'diagnostics'
+    New-Item -ItemType Directory -Path $outDir -Force | Out-Null
+    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+    $rawDir = Join-Path $outDir ("REAL-health-raw-$stamp")
+    New-Item -ItemType Directory -Path $rawDir -Force | Out-Null
+
+    [IO.File]::WriteAllBytes((Join-Path $rawDir '01-P1-full.bin'), $p1Full1)
+    [IO.File]::WriteAllBytes((Join-Path $rawDir '01-P2-full.bin'), $p2Full1)
+    [IO.File]::WriteAllBytes((Join-Path $rawDir '02-P1-damaged.bin'), $p1Damaged)
+    [IO.File]::WriteAllBytes((Join-Path $rawDir '02-P2-while-P1-damaged.bin'), $p2WhileP1Damaged)
+    [IO.File]::WriteAllBytes((Join-Path $rawDir '03-P1-full.bin'), $p1Full2)
+    [IO.File]::WriteAllBytes((Join-Path $rawDir '03-P2-full.bin'), $p2Full2)
+    [IO.File]::WriteAllBytes((Join-Path $rawDir '04-P1-while-P2-damaged.bin'), $p1WhileP2Damaged)
+    [IO.File]::WriteAllBytes((Join-Path $rawDir '04-P2-damaged.bin'), $p2Damaged)
+
+    Write-Host ''
+    Write-Host ('Surowe pomiary zapisane: ' + $rawDir)
 
     $c32 = New-Object System.Collections.Generic.List[object]
     for ($o=0; $o -le $scanSize-4; $o+=4) {
@@ -257,12 +277,15 @@ try {
         }
     }
 
-    $all = @($c32) + @($c16) + @($cf)
-    $top = @($all | Sort-Object @{Expression='Score';Descending=$true},Type,Offset | Select-Object -First 100)
+    # Do not use + on generic List[object] collections in Windows PowerShell.
+    # Enumerate them into one ordinary object array instead.
+    $all = @(
+        foreach ($item in $c32) { $item }
+        foreach ($item in $c16) { $item }
+        foreach ($item in $cf)  { $item }
+    )
+    $top = @($all | Sort-Object -Property @{Expression={$_.Score};Descending=$true},Type,Offset | Select-Object -First 100)
 
-    $outDir = Join-Path $PSScriptRoot 'diagnostics'
-    New-Item -ItemType Directory -Path $outDir -Force | Out-Null
-    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
     $outFile = Join-Path $outDir ("REAL-health-candidates-$stamp.txt")
 
     $lines = New-Object System.Collections.Generic.List[string]
