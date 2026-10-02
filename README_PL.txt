@@ -203,3 +203,29 @@ a potem Start Patras1993 Host.cmd.
 
 Folder Backups i prywatne runtimeowe pliki RPCN sa ignorowane przez Git,
 zeby baza kont i klucze nie trafily przypadkiem do repozytorium.
+
+
+========================================
+RPCS3 20161 - TEST CANDIDATE
+========================================
+
+Stabilna baza v2.1.0 pozostaje przypieta do:
+RPCS3 0.0.43-20147-dfc0542a.
+
+Na galezi patras1993-independent-server dopuszczony jest test:
+RPCS3 0.0.43-20161.
+
+Po aktualizacji RPCS3 przez jego oficjalny updater uruchom:
+Host\Test RPCS3 20161.cmd
+
+Tester sprawdza:
+- wykrycie builda 20161,
+- NPUB31250,
+- patch,
+- Private Match,
+- RPCN TCP 31313,
+- backend TCP 443,
+- Tailscale.
+
+Dopiero po realnym tescie online host/guest 20161 moze zastapic 20147
+jako wersje bazowa. Do tego czasu stable-v2.1.0 nie jest zmieniany.
