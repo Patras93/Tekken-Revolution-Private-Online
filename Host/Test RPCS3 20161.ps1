@@ -23,25 +23,82 @@ function Result([string]$Name,[bool]$Ok,[string]$Detail='') {
     else { Write-Host "$Name : $state" }
 }
 
+function Get-GzipText([string]$Path) {
+    try {
+        $fs = [IO.File]::OpenRead($Path)
+        try {
+            $gz = New-Object IO.Compression.GZipStream($fs,[IO.Compression.CompressionMode]::Decompress)
+            try {
+                $sr = New-Object IO.StreamReader($gz)
+                try { return $sr.ReadToEnd() }
+                finally { $sr.Dispose() }
+            }
+            finally { $gz.Dispose() }
+        }
+        finally { $fs.Dispose() }
+    }
+    catch { return '' }
+}
+
+function Get-Rpcs3VersionEvidence {
+    param([string]$Exe,[string]$Dir)
+
+    $pieces = New-Object 'System.Collections.Generic.List[string]'
+
+    try {
+        $vi = (Get-Item -LiteralPath $Exe).VersionInfo
+        [void]$pieces.Add([string]$vi.FileVersion)
+        [void]$pieces.Add([string]$vi.ProductVersion)
+    } catch {}
+
+    $proc = Get-Process rpcs3 -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($proc -and $proc.MainWindowTitle) {
+        [void]$pieces.Add([string]$proc.MainWindowTitle)
+    }
+
+    $rawLog = Join-Path $Dir 'RPCS3.log'
+    if (Test-Path -LiteralPath $rawLog) {
+        try {
+            $txt = Get-Content -LiteralPath $rawLog -Raw -ErrorAction Stop
+            if ($txt) { [void]$pieces.Add($txt) }
+        } catch {}
+    }
+
+    $gzLog = Join-Path $Dir 'RPCS3.log.gz'
+    if (Test-Path -LiteralPath $gzLog) {
+        $txt = Get-GzipText $gzLog
+        if ($txt) { [void]$pieces.Add($txt) }
+    }
+
+    return ($pieces -join [Environment]::NewLine)
+}
+
+function TcpPortOpen([int]$Port) {
+    try { return [bool](Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction Stop) }
+    catch { return $false }
+}
+
+function UdpPortOpen([int]$Port) {
+    try { return [bool](Get-NetUDPEndpoint -LocalPort $Port -ErrorAction Stop) }
+    catch { return $false }
+}
+
 Result 'RPCS3 EXE' (Test-Path -LiteralPath $rpcs3Exe) $rpcs3Exe
 if (-not (Test-Path -LiteralPath $rpcs3Exe)) { exit 2 }
 
-$vi = (Get-Item -LiteralPath $rpcs3Exe).VersionInfo
-$combined = "$($vi.FileVersion) $($vi.ProductVersion)"
-$versionOk = $combined -like '*20161*'
-
-if (-not $versionOk) {
-    $log = Join-Path $rpcs3Dir 'RPCS3.log'
-    if (Test-Path -LiteralPath $log) {
-        $firstLine = Get-Content -LiteralPath $log -TotalCount 1
-        if ($firstLine -like '*20161*') {
-            $versionOk = $true
-            $combined = $firstLine
-        }
-    }
+$evidence = Get-Rpcs3VersionEvidence -Exe $rpcs3Exe -Dir $rpcs3Dir
+$versionOk = $evidence -match '0\.0\.43-20161|\b20161\b'
+$versionDetail = ''
+if ($versionOk) {
+    $m = [regex]::Match($evidence, '0\.0\.43-20161(?:-[A-Za-z0-9]+)?')
+    if ($m.Success) { $versionDetail = $m.Value }
+    else { $versionDetail = '20161 wykryty' }
 }
+else {
+    $versionDetail = 'nie wykryto numeru; uruchom RPCS3 raz, zamknij i powtorz test'
+}
+Result 'RPCS3 20161' $versionOk $versionDetail
 
-Result 'RPCS3 20161' $versionOk $combined
 Result 'Tekken Revolution NPUB31250' (Test-Path -LiteralPath $game)
 Result 'Patch NPUB31250' (Test-Path -LiteralPath $patch)
 
@@ -52,12 +109,30 @@ if (Test-Path -LiteralPath $patchConfig) {
 }
 Result 'Private Match ON' $privateMatchOk
 
-$rpcnTcp = $false
-try { $rpcnTcp = [bool](Get-NetTCPConnection -LocalPort 31313 -State Listen -ErrorAction Stop) } catch {}
-Result 'RPCN TCP 31313' $rpcnTcp
+$rpcnTcp = TcpPortOpen 31313
+$https = TcpPortOpen 443
+$rpcnUdp = UdpPortOpen 3657
 
-$https = $false
-try { $https = [bool](Get-NetTCPConnection -LocalPort 443 -State Listen -ErrorAction Stop) } catch {}
+if (-not ($rpcnTcp -and $https -and $rpcnUdp)) {
+    Write-Host ''
+    Write-Host 'Host jest zatrzymany lub niekompletny. Probuje go uruchomic...'
+    $startScript = Join-Path $hostDir 'Start Patras1993 Host.ps1'
+    if (Test-Path -LiteralPath $startScript) {
+        try {
+            & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $startScript | Out-Host
+            Start-Sleep -Seconds 1
+        } catch {
+            Write-Host ('Automatyczny start hosta nie udal sie: ' + $_.Exception.Message)
+        }
+    }
+
+    $rpcnTcp = TcpPortOpen 31313
+    $https = TcpPortOpen 443
+    $rpcnUdp = UdpPortOpen 3657
+}
+
+Result 'RPCN TCP 31313' $rpcnTcp
+Result 'RPCN UDP 3657' $rpcnUdp
 Result 'Backend HTTPS 443' $https
 
 $tailscale = Get-Command tailscale.exe -ErrorAction SilentlyContinue
@@ -72,12 +147,21 @@ if ($tailscale) {
 Result 'Tailscale' $tailscaleOk $tailscaleIp
 
 Write-Host ''
-if ($versionOk -and (Test-Path -LiteralPath $game) -and (Test-Path -LiteralPath $patch)) {
+$localOk = $versionOk -and
+           (Test-Path -LiteralPath $game) -and
+           (Test-Path -LiteralPath $patch) -and
+           $privateMatchOk -and
+           $rpcnTcp -and $rpcnUdp -and $https -and $tailscaleOk
+
+if ($localOk) {
     [IO.File]::WriteAllText((Join-Path $rpcs3Dir 'patras1993_rpc3_build.txt'), '0.0.43-20161', (New-Object System.Text.UTF8Encoding($false)))
-    Write-Host 'LOKALNY TEST 20161: GOTOWY DO URUCHOMIENIA GRY.'
-    Write-Host 'Nastepnie uruchom Private Match ON.cmd i Tekken Revolution.'
+    Write-Host 'LOKALNY TEST 20161: PASS.'
+    Write-Host 'Nastepny etap: realny test online z Guest.'
+    exit 0
 }
-else {
-    Write-Host 'LOKALNY TEST 20161: NIEPRZEJSCIONY.'
-    exit 2
+
+Write-Host 'LOKALNY TEST 20161: NIEPRZEJSCIONY.'
+if (-not $versionOk) {
+    Write-Host 'Wersja nie zostala rozpoznana. Uruchom RPCS3 20161 jeden raz, zamknij emulator i powtorz test.'
 }
+exit 2
