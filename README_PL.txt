@@ -168,3 +168,38 @@ Stare osobne przelaczniki zdrowia zostaly usuniete.
 Host Start pokazuje adres Tailscale IPv4.
 Host Diagnose sprawdza Tailscale, nasluch RPCN TCP 31313 i regule Windows Firewall.
 Eksperymentalny P1 Health Shield zostal usuniety z patcha.
+
+
+========================================
+BACKUP STANU SERWERA
+========================================
+
+Stabilna galaz stable-v2.1.0 i paczki v2.1.0 zachowuja kod oraz konfiguracje bazowa.
+Nie sa kopia zywej bazy kont utworzonych pozniej na prywatnym RPCN.
+
+Aby zachowac aktualny stan hosta, uruchom:
+
+Host\Backup Patras1993.cmd
+
+Skrypt zatrzymuje hosta i tworzy:
+Backups\Patras1993-Full-Backup-RRRRMMDD-GGMMSS.zip
+
+Backup zawiera:
+- caly local_rpcn, w tym runtimeowa baze kont RPCN i klucze,
+- local_backend i local_patch,
+- host_config.json,
+- wazne ustawienia RPCS3,
+- dev_hdd0\home,
+- certyfikat backendu z kluczem prywatnym,
+- informacje o aktualnym Tailscale.
+
+Backup NIE zawiera calej gry ani calego RPCS3.
+
+Aby odtworzyc ostatni backup:
+Host\Restore Patras1993.cmd
+
+Po Restore uruchom Setup Patras1993 Host.cmd jako administrator,
+a potem Start Patras1993 Host.cmd.
+
+Folder Backups i prywatne runtimeowe pliki RPCN sa ignorowane przez Git,
+zeby baza kont i klucze nie trafily przypadkiem do repozytorium.
