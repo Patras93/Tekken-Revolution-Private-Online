@@ -500,3 +500,15 @@ PPU-1504b75ba97abccdf2d0a93dd93aaff10591a01e:
       - [ be32, 0x00EC3830, 0x80030004 ]
       - [ be32, 0x00EC3834, 0x4B55D250 ]
       - [ be32, 0x00EC3838, 0x4E800020 ]
+
+  "Patras1993 Practice Online - Both Players No HP Loss":
+    Games:
+      "TEKKEN REVOLUTION":
+        NPUB31250: [ 01.05 ]
+    Author: "Patras1993 private practice"
+    Patch Version: 0.1.0
+    Group: ""
+    Notes: "Practice Online preset: preserves the normal hit/damage routine but NOPs the two HP subtraction instructions. Both players keep their HP while hit reactions and the rest of the routine continue."
+    Patch:
+      - [ be32, 0x00420A84, 0x60000000 ]
+      - [ be32, 0x00420ACC, 0x60000000 ]
