@@ -1,10 +1,11 @@
-name: Build Stable v2.2.0 Packages
-# source: stable-v2.2.0 / RPCN Direct
+name: Build Tekken Revolution Packages
 
 on:
   push:
     branches:
-      - stable-v2.2.0
+      - main
+    tags:
+      - "v*"
     paths:
       - ".github/workflows/build-guest-package.yml"
       - "Host/**"
@@ -13,42 +14,74 @@ on:
       - "local_patch/**"
       - "VERSION.txt"
       - "README_PL.txt"
-      - "RELEASE_NOTES_v2.2.0.txt"
+      - "RELEASE_NOTES_*.txt"
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
     runs-on: windows-latest
-    steps:
-      - name: Checkout stable v2.2.0
-        uses: actions/checkout@v4
-        with:
-          ref: stable-v2.2.0
 
-      - name: Build stable v2.2.0 ZIP packages
+    steps:
+      - name: Checkout current revision
+        uses: actions/checkout@v4
+
+      - name: Determine package version
+        id: version
         shell: pwsh
         run: |
           $ErrorActionPreference = 'Stop'
 
-          $guestStage = 'package-guest\Patras1993-Tekken-Revolution-Guest-v2.2.0'
-          $hostStage = 'package-host\Patras1993-Tekken-Revolution-Host-v2.2.0'
+          if ($env:GITHUB_REF_TYPE -eq 'tag') {
+            $version = $env:GITHUB_REF_NAME
+          }
+          else {
+            $raw = (Get-Content 'VERSION.txt' -Raw).Trim()
+            $raw = $raw -replace '-stable$',''
+            if ($raw -notmatch '^v') { $raw = 'v' + $raw }
+            $version = $raw
+          }
+
+          "version=$version" >> $env:GITHUB_OUTPUT
+          Write-Host "Package version: $version"
+
+      - name: Build ZIP packages
+        id: package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $version = '\${{ steps.version.outputs.version }}'
+          $guestName = "Patras1993-Tekken-Revolution-Guest-$version"
+          $hostName = "Patras1993-Tekken-Revolution-Host-$version"
+
+          $guestStage = Join-Path 'package-guest' $guestName
+          $hostStage = Join-Path 'package-host' $hostName
 
           New-Item -ItemType Directory -Path $guestStage -Force | Out-Null
           New-Item -ItemType Directory -Path $hostStage -Force | Out-Null
 
           Copy-Item 'Guest\*' $guestStage -Recurse -Force
           Copy-Item 'VERSION.txt' $guestStage -Force
-          Copy-Item 'RELEASE_NOTES_v2.2.0.txt' $guestStage -Force
+
+          $releaseNotes = Get-ChildItem -Filter 'RELEASE_NOTES_*.txt' | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+          if ($releaseNotes) {
+            Copy-Item $releaseNotes.FullName $guestStage -Force
+          }
 
           Copy-Item 'Host' $hostStage -Recurse -Force
           Copy-Item 'local_patch' $hostStage -Recurse -Force
           Copy-Item 'local_rpcn' $hostStage -Recurse -Force
           Copy-Item 'README_PL.txt' $hostStage -Force
           Copy-Item 'VERSION.txt' $hostStage -Force
-          Copy-Item 'RELEASE_NOTES_v2.2.0.txt' $hostStage -Force
+          if ($releaseNotes) {
+            Copy-Item $releaseNotes.FullName $hostStage -Force
+          }
 
-          $guestZip = 'Patras1993-Tekken-Revolution-Guest-v2.2.0.zip'
-          $hostZip = 'Patras1993-Tekken-Revolution-Host-v2.2.0.zip'
+          $guestZip = "$guestName.zip"
+          $hostZip = "$hostName.zip"
 
           Compress-Archive -Path 'package-guest\*' -DestinationPath $guestZip -CompressionLevel Optimal -Force
           Compress-Archive -Path 'package-host\*' -DestinationPath $hostZip -CompressionLevel Optimal -Force
@@ -56,35 +89,62 @@ jobs:
           $guestEntries = tar -tf $guestZip
           $hostEntries = tar -tf $hostZip
 
-          if ($guestEntries -match 'No BTB|tekkenbtb|local_backend|version\.dll|tr_updater') {
-            throw 'Guest stable zawiera pozostalosci starej architektury.'
+          if ($guestEntries -match 'tekkenbtb|local_backend|version\.dll|tr_updater') {
+            throw 'Guest ZIP zawiera pozostalosci starej architektury.'
           }
-          if ($hostEntries -match 'No BTB|local_backend|version\.dll|tr_updater|modules/tr') {
-            throw 'Host stable zawiera pozostalosci starej architektury.'
+          if ($guestEntries -match 'tailscale') {
+            throw 'Guest ZIP nadal zawiera aktywne pliki lub nazwy zwiazane z Tailscale.'
+          }
+
+          if ($hostEntries -match 'local_backend|version\.dll|tr_updater|modules/tr') {
+            throw 'Host ZIP zawiera pozostalosci starej architektury.'
           }
 
           if (-not ($hostEntries -match 'local_rpcn[\\/]rpcn\.exe')) {
-            throw 'Host stable nie zawiera rpcn.exe.'
+            throw 'Host ZIP nie zawiera rpcn.exe.'
           }
           if (-not ($hostEntries -match 'local_rpcn[\\/]rpcn_version\.txt')) {
-            throw 'Host stable nie zawiera rpcn_version.txt.'
+            throw 'Host ZIP nie zawiera rpcn_version.txt.'
           }
 
-          Write-Host "Guest ZIP: $((Get-Item $guestZip).Length) bytes"
-          Write-Host "Host ZIP: $((Get-Item $hostZip).Length) bytes"
+          "guest_zip=$guestZip" >> $env:GITHUB_OUTPUT
+          "host_zip=$hostZip" >> $env:GITHUB_OUTPUT
 
-      - name: Upload Guest v2.2.0
+          Write-Host "Guest ZIP: $guestZip ($((Get-Item $guestZip).Length) bytes)"
+          Write-Host "Host ZIP: $hostZip ($((Get-Item $hostZip).Length) bytes)"
+
+      - name: Upload Guest ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: Patras1993-Tekken-Revolution-Guest-v2.2.0
-          path: Patras1993-Tekken-Revolution-Guest-v2.2.0.zip
+          name: Patras1993-Tekken-Revolution-Guest-\${{ steps.version.outputs.version }}
+          path: \${{ steps.package.outputs.guest_zip }}
           if-no-files-found: error
           retention-days: 30
 
-      - name: Upload Host v2.2.0
+      - name: Upload Host ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: Patras1993-Tekken-Revolution-Host-v2.2.0
-          path: Patras1993-Tekken-Revolution-Host-v2.2.0.zip
+          name: Patras1993-Tekken-Revolution-Host-\${{ steps.version.outputs.version }}
+          path: \${{ steps.package.outputs.host_zip }}
           if-no-files-found: error
           retention-days: 30
+
+      - name: Attach ZIP files to GitHub Release
+        if: github.ref_type == 'tag'
+        shell: pwsh
+        env:
+          GH_TOKEN: \${{ github.token }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $tag = '\${{ steps.version.outputs.version }}'
+          $guestZip = '\${{ steps.package.outputs.guest_zip }}'
+          $hostZip = '\${{ steps.package.outputs.host_zip }}'
+
+          gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag $guestZip $hostZip --repo $env:GITHUB_REPOSITORY --title "Tekken Revolution Private Online $tag" --generate-notes
+          }
+          else {
+            gh release upload $tag $guestZip $hostZip --repo $env:GITHUB_REPOSITORY --clobber
+          }
