@@ -9,9 +9,10 @@ $fallbackBuild = '0.0.43-20147-dfc0542a'
 $acceptedBuilds = @($preferredBuild, $fallbackBuild)
 $nativePatchSource = Join-Path $PSScriptRoot 'Patras1993_NPUB31250_patch.yml'
 
-# Siec zapewnia Patras Tekken Client Native / zrok.
-# RPCS3 zawsze laczy sie z lokalnym koncem tunelu.
-$rpcnHost = '127.0.0.1'
+$hostIp = Read-Host 'Podaj adres Tailscale hosta Patras1993 (100.x.x.x)'
+if ($hostIp -notmatch '^100\.(?:[0-9]{1,3}\.){2}[0-9]{1,3}$') {
+    throw 'Nieprawidlowy adres Tailscale.'
+}
 
 $preferredRpcs3 = 'E:\instalacje gier\rpcs3-v0.0.43-20146-4d88114c_win64\rpcs3.exe'
 $candidates = @(
@@ -284,24 +285,24 @@ $hostsFound = $false
 
 for ($i = 0; $i -lt $rpcnLines.Count; $i++) {
     if ($rpcnLines[$i] -match '^Host:\s*') {
-        $rpcnLines[$i] = 'Host: ' + $rpcnHost
+        $rpcnLines[$i] = 'Host: ' + $hostIp
         $hostFound = $true
     }
     elseif ($rpcnLines[$i] -match '^Hosts:\s*') {
-        $rpcnLines[$i] = 'Hosts: "Patras1993 Tunnel|' + $rpcnHost + '"'
+        $rpcnLines[$i] = 'Hosts: "Patras1993|' + $hostIp + '"'
         $hostsFound = $true
     }
 }
 
 if (-not $hostFound) {
-    $rpcnLines += 'Host: ' + $rpcnHost
+    $rpcnLines += 'Host: ' + $hostIp
 }
 if (-not $hostsFound) {
-    $rpcnLines += 'Hosts: "Patras1993 Tunnel|' + $rpcnHost + '"'
+    $rpcnLines += 'Hosts: "Patras1993|' + $hostIp + '"'
 }
 
 [IO.File]::WriteAllLines($rpcnPath, $rpcnLines, (New-Object System.Text.UTF8Encoding($false)))
-Write-Host "RPCN: host ustawiony na $rpcnHost (lokalny tunel)"
+Write-Host "RPCN: host ustawiony na $hostIp"
 Write-Host 'RPCN: istniejacy NPID/Password/Token pozostawione bez zmian.'
 
 $hostsPath = "$env:SystemRoot\System32\drivers\etc\hosts"
@@ -326,24 +327,22 @@ if (($currentHostLines -join [Environment]::NewLine) -ne ($cleanHostLines -join 
 
 $configPath = Join-Path $PSScriptRoot 'guest_config.json'
 @{
-    rpcn_host = $rpcnHost
-    connection_mode = 'Patras Tekken Client Native / zrok tunnel'
+    host_tailscale_ip = $hostIp
     rpcs3_directory = $rpcs3
     required_rpcs3_build = $detectedBuild
     game = 'NPUB31250'
 } | ConvertTo-Json | Set-Content -LiteralPath $configPath -Encoding UTF8
 
 Write-Host ''
-Write-Host 'GUEST v2.2.0 GOTOWY.'
+Write-Host 'GUEST v2.2.1 GOTOWY.'
 Write-Host "RPCS3: $detectedBuild"
 Write-Host 'Tekken Revolution: NPUB31250 01.05'
 Write-Host 'Patch: Patras1993 Revolution Runtime Patches'
-Write-Host "RPCN: $rpcnHost przez Patras Tekken Client Native"
+Write-Host "RPCN: $hostIp"
 Write-Host ''
 Write-Host 'WAŻNE - KONTO RPCN PATRAS1993:'
 Write-Host 'Konto na oficjalnym RPCN nie tworzy automatycznie konta na prywatnym serwerze Patras1993.'
 Write-Host 'Jesli pierwszy raz laczysz sie z Patras1993, uruchom RPCS3 i utworz osobne konto RPCN na serwerze Patras1993.'
-Write-Host 'Przed uruchomieniem gry polacz Patras Tekken Client Native z hostem Patras1993.'
-Write-Host 'Potem uruchamiaj gre przez Guest\Start Online Guest.cmd.'
+Write-Host 'Po utworzeniu konta i poprawnym zalogowaniu uruchamiaj gre przez Guest\Start Online Guest.cmd.'
 Write-Host ''
 Read-Host 'Nacisnij ENTER po przeczytaniu tej informacji'

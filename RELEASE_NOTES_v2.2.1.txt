@@ -1,0 +1,21 @@
+TEKKEN REVOLUTION PRIVATE ONLINE v2.2.1
+GUEST TAILSCALE HOTFIX
+
+- Guest ponownie laczy sie bezposrednio przez Tailscale.
+- Usunieto zaleznosc Guest od Patras Tekken Client / zrok.
+- Setup Online Guest ponownie pyta o adres Tailscale hosta 100.x.x.x.
+- RPCN Guest jest ustawiany bezposrednio na adres Tailscale hosta.
+- Start Online Guest sprawdza TCP 31313 na hoscie Tailscale.
+- Ruch gry UDP 3657 idzie przez Tailscale zamiast lokalnego tunelu zrok.
+- Przywrocono guest_config z polem host_tailscale_ip.
+- Host i prywatny RPCN pozostaja bez zmian.
+
+Zweryfikowany dzialajacy adres hosta 2026-10-02:
+100.66.211.73
+
+RPCS3:
+preferowany 0.0.43-20161-96ccd89c
+fallback 0.0.43-20147-dfc0542a
+
+Tekken Revolution:
+NPUB31250 01.05

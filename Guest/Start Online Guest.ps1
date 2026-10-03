@@ -7,10 +7,7 @@ if (-not (Test-Path -LiteralPath $configPath)) {
 
 $cfg = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
 $rpcs3 = [string]$cfg.rpcs3_directory
-$rpcnHost = '127.0.0.1'
-if (($cfg.PSObject.Properties.Name -contains 'rpcn_host') -and [string]$cfg.rpcn_host) {
-    $rpcnHost = [string]$cfg.rpcn_host
-}
+$hostIp = [string]$cfg.host_tailscale_ip
 $expectedBuild = [string]$cfg.required_rpcs3_build
 
 $rpcs3Exe = Join-Path $rpcs3 'rpcs3.exe'
@@ -46,24 +43,19 @@ if (-not (Test-Path -LiteralPath $rpcnConfig)) {
 }
 
 $rpcnText = Get-Content -LiteralPath $rpcnConfig -Raw
-if ($rpcnText -notmatch ('(?m)^Host:\s*' + [regex]::Escape($rpcnHost) + '\s*$')) {
-    throw 'RPCN nie wskazuje na lokalny tunel 127.0.0.1. Uruchom ponownie Setup Online Guest.cmd.'
+if ($hostIp -and $rpcnText -notmatch ('(?m)^Host:\s*' + [regex]::Escape($hostIp) + '\s*$')) {
+    throw 'RPCN nie wskazuje na host Patras1993. Uruchom ponownie Setup Online Guest.cmd.'
 }
 
-Write-Host ('Sprawdzanie lokalnego tunelu RPCN: ' + $rpcnHost + ':31313...')
-$rpcnReachable = Test-NetConnection -ComputerName $rpcnHost -Port 31313 -InformationLevel Quiet -WarningAction SilentlyContinue
-if (-not $rpcnReachable) {
-    throw 'Lokalny tunel TCP 31313 nie dziala. Uruchom Patras Tekken Client.exe i nacisnij Polacz.'
+if ($hostIp) {
+    Write-Host ('Sprawdzanie Patras1993 RPCN: ' + $hostIp + ':31313...')
+    $rpcnReachable = Test-NetConnection -ComputerName $hostIp -Port 31313 -InformationLevel Quiet -WarningAction SilentlyContinue
+    if (-not $rpcnReachable) {
+        throw ('Nie mozna polaczyc sie z Patras1993 RPCN pod ' + $hostIp + ':31313. Sprawdz Tailscale i czy Host jest uruchomiony.')
+    }
 }
 
-$udpReady = [bool](Get-NetUDPEndpoint -LocalPort 3657 -ErrorAction SilentlyContinue)
-if (-not $udpReady) {
-    throw 'Lokalny tunel UDP 3657 nie dziala. Uruchom Patras Tekken Client.exe i nacisnij Polacz.'
-}
-
-Write-Host 'Patras1993 RPCN przez lokalny tunel: OK'
-Write-Host 'TCP 31313: OK'
-Write-Host 'UDP 3657: OK'
+Write-Host 'Patras1993 RPCN: OK'
 Write-Host ('RPCS3: ' + $markerValue)
 Write-Host 'Patch Revolution: OK'
 Write-Host 'Uruchamianie Tekken Revolution...'
