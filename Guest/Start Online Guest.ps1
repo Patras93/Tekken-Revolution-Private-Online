@@ -46,17 +46,7 @@ if (-not (Test-Path -LiteralPath $rpcnConfig)) {
 }
 
 $rpcnText = Get-Content -LiteralPath $rpcnConfig -Raw
-if ($rpcnText -notmatch ('(?m)^Host:\s*' + [regex]::Escape($rpcnHost) + '\s*
-
-Write-Host 'Patras1993 RPCN przez lokalny tunel: OK'
-Write-Host 'TCP 31313: OK'
-Write-Host 'UDP 3657: OK'
-Write-Host ('RPCS3: ' + $markerValue)
-Write-Host 'Patch Revolution: OK'
-Write-Host 'Uruchamianie Tekken Revolution...'
-
-Start-Process -FilePath $rpcs3Exe -ArgumentList ('"' + $game + '"') -WorkingDirectory $rpcs3
-)) {
+if ($rpcnText -notmatch ('(?m)^Host:\s*' + [regex]::Escape($rpcnHost) + '\s*$')) {
     throw 'RPCN nie wskazuje na lokalny tunel 127.0.0.1. Uruchom ponownie Setup Online Guest.cmd.'
 }
 
@@ -71,7 +61,9 @@ if (-not $udpReady) {
     throw 'Lokalny tunel UDP 3657 nie dziala. Uruchom Patras Tekken Client.exe i nacisnij Polacz.'
 }
 
-Write-Host 'Patras1993 RPCN: OK'
+Write-Host 'Patras1993 RPCN przez lokalny tunel: OK'
+Write-Host 'TCP 31313: OK'
+Write-Host 'UDP 3657: OK'
 Write-Host ('RPCS3: ' + $markerValue)
 Write-Host 'Patch Revolution: OK'
 Write-Host 'Uruchamianie Tekken Revolution...'
