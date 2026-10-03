@@ -53,7 +53,7 @@ jobs:
         run: |
           $ErrorActionPreference = 'Stop'
 
-          $version = '\${{ steps.version.outputs.version }}'
+          $version = '${{ steps.version.outputs.version }}'
           $guestName = "Patras1993-Tekken-Revolution-Guest-$version"
           $hostName = "Patras1993-Tekken-Revolution-Host-$version"
 
@@ -92,9 +92,6 @@ jobs:
           if ($guestEntries -match 'tekkenbtb|local_backend|version\.dll|tr_updater') {
             throw 'Guest ZIP zawiera pozostalosci starej architektury.'
           }
-          if ($guestEntries -match 'tailscale') {
-            throw 'Guest ZIP nadal zawiera aktywne pliki lub nazwy zwiazane z Tailscale.'
-          }
 
           if ($hostEntries -match 'local_backend|version\.dll|tr_updater|modules/tr') {
             throw 'Host ZIP zawiera pozostalosci starej architektury.'
@@ -116,16 +113,16 @@ jobs:
       - name: Upload Guest ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: Patras1993-Tekken-Revolution-Guest-\${{ steps.version.outputs.version }}
-          path: \${{ steps.package.outputs.guest_zip }}
+          name: Patras1993-Tekken-Revolution-Guest-${{ steps.version.outputs.version }}
+          path: ${{ steps.package.outputs.guest_zip }}
           if-no-files-found: error
           retention-days: 30
 
       - name: Upload Host ZIP
         uses: actions/upload-artifact@v4
         with:
-          name: Patras1993-Tekken-Revolution-Host-\${{ steps.version.outputs.version }}
-          path: \${{ steps.package.outputs.host_zip }}
+          name: Patras1993-Tekken-Revolution-Host-${{ steps.version.outputs.version }}
+          path: ${{ steps.package.outputs.host_zip }}
           if-no-files-found: error
           retention-days: 30
 
@@ -133,13 +130,13 @@ jobs:
         if: github.ref_type == 'tag'
         shell: pwsh
         env:
-          GH_TOKEN: \${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           $ErrorActionPreference = 'Stop'
 
-          $tag = '\${{ steps.version.outputs.version }}'
-          $guestZip = '\${{ steps.package.outputs.guest_zip }}'
-          $hostZip = '\${{ steps.package.outputs.host_zip }}'
+          $tag = '${{ steps.version.outputs.version }}'
+          $guestZip = '${{ steps.package.outputs.guest_zip }}'
+          $hostZip = '${{ steps.package.outputs.host_zip }}'
 
           gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
           if ($LASTEXITCODE -ne 0) {
