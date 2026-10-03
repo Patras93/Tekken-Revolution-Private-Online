@@ -1,4 +1,5 @@
 {
-  "host_tailscale_ip": "100.x.x.x",
+  "rpcn_host": "127.0.0.1",
+  "connection_mode": "Patras Tekken Client Native / zrok tunnel",
   "rpcs3_directory": ""
 }
