@@ -127,7 +127,7 @@ jobs:
           retention-days: 30
 
       - name: Attach ZIP files to GitHub Release
-        if: github.ref_type == 'tag'
+        if: github.ref_type == 'tag' || github.ref_name == 'main'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -140,7 +140,7 @@ jobs:
 
           gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
           if ($LASTEXITCODE -ne 0) {
-            gh release create $tag $guestZip $hostZip --repo $env:GITHUB_REPOSITORY --title "Tekken Revolution Private Online $tag" --generate-notes
+            gh release create $tag $guestZip $hostZip --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "Tekken Revolution Private Online $tag" --generate-notes
           }
           else {
             gh release upload $tag $guestZip $hostZip --repo $env:GITHUB_REPOSITORY --clobber
