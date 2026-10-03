@@ -1,5 +1,5 @@
 TEKKEN REVOLUTION PRIVATE ONLINE - GUEST
-v2.2.0 RPCN DIRECT
+v2.2.0 RPCN DIRECT + PATRAS TEKKEN TUNNEL
 
 ========================================
 CO MUSISZ MIEC
@@ -7,34 +7,47 @@ CO MUSISZ MIEC
 
 - RPCS3 0.0.43-20161-96ccd89c (preferowany)
 - Tekken Revolution NPUB31250 01.05
-- Tailscale
+- Patras Tekken Client Native
 - folder Guest
 
 RPCS3 i gra nie sa czescia paczki.
+Tailscale NIE jest potrzebny.
 
 ========================================
-KROK 1 - TAILSCALE
+KROK 1 - PATRAS TEKKEN CLIENT
 ========================================
 
-Dolacz do tej samej sieci Tailscale co host.
-Host poda adres:
-100.x.x.x
+Uruchom Patras Tekken Client.exe.
+
+Przy pierwszej konfiguracji:
+- aktywuj swoje darmowe konto zrok,
+- wklej kod PTT1 otrzymany od Patras1993,
+- wskaz rpcs3.exe,
+- wykonaj Konfiguracja pierwszy raz.
+
+Do normalnej gry:
+- uruchom Client,
+- nacisnij Polacz albo Uruchom Tekken.
+
+Client tworzy lokalne konce tunelu:
+TCP 127.0.0.1:31313
+UDP 127.0.0.1:3657
 
 ========================================
-KROK 2 - SETUP
+KROK 2 - SETUP GUEST
 ========================================
 
 Uruchom jako administrator:
 
 Setup Online Guest.cmd
 
-Podaj tylko adres Tailscale hosta.
-
 Skrypt:
+- NIE pyta o adres hosta,
+- NIE uzywa Tailscale,
 - znajdzie RPCS3 z NPUB31250,
 - sprawdzi obslugiwany build RPCS3,
 - zainstaluje natywny patch Revolution,
-- ustawi RPCN bezposrednio na adres Tailscale hosta,
+- ustawi RPCN na 127.0.0.1,
 - zachowa NPID/Password/Token,
 - usunie historyczne aliasy BTB z HOSTS,
 - nie doda zadnych nowych domen.
@@ -46,10 +59,11 @@ KROK 3 - KONTO RPCN
 Konto oficjalnego RPCN nie jest kontem prywatnego serwera Patras1993.
 
 Przy pierwszym polaczeniu:
-1. Uruchom RPCS3.
-2. Utworz osobne konto RPCN na serwerze Patras1993.
-3. Zaloguj sie.
-4. Komunikat "Twoje konto jest prawidlowe" oznacza sukces.
+1. Polacz Patras Tekken Client z Patras1993.
+2. Uruchom RPCS3.
+3. Utworz osobne konto RPCN na serwerze Patras1993.
+4. Zaloguj sie.
+5. Komunikat "Twoje konto jest prawidlowe" oznacza sukces.
 
 ========================================
 KROK 4 - PRIVATE MATCH
@@ -70,14 +84,21 @@ Preset:
 KROK 5 - START
 ========================================
 
-Uruchom:
+Najpierw Patras Tekken Client musi byc POLACZONY.
+
+Nastepnie uruchom:
 
 Start Online Guest.cmd
 
-Guest laczy sie bezposrednio:
-RPCN -> adres Tailscale hosta -> TCP 31313 / UDP 3657
+Guest laczy sie:
+RPCS3 -> 127.0.0.1 -> Patras Tekken Client -> zrok -> Patras1993 Host
+TCP 31313 / UDP 3657
 
-Backend HTTPS 443, launcher BTB i domeny BTB nie sa potrzebne.
+Start sprawdza lokalnie:
+- TCP 31313,
+- UDP 3657.
+
+Backend HTTPS 443, launcher BTB, domeny BTB i Tailscale nie sa potrzebne.
 
 ========================================
 RPCS3
