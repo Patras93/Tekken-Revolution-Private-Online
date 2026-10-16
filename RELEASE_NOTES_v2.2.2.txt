@@ -1,0 +1,24 @@
+TEKKEN REVOLUTION PRIVATE ONLINE v2.2.2
+NOWY RPCS3 BEZ DOWNGRADE - HOST I GUEST
+2026-10-16
+
+1. Guest Setup nie blokuje emulatora, jesli numer buildu jest nowszy
+   niz historycznie przetestowane 20161/20147.
+2. Guest Start nadal sprawdza gre, patch i dostepnosc prywatnego RPCN,
+   lecz nie wymaga pliku markera starego buildu.
+3. Guest Setup zachowuje inny, juz zainstalowany patch NPUB31250.
+   Nie nadpisuje dzialajacej wersji, ktora pobiera eventy.
+4. Historyczny skrypt Update RPCS3 nie pobiera ani nie kopiuje 20161;
+   wskazuje bezpieczne aktualizowanie przez oficjalny RPCS3.
+5. Test Host przestaje odrzucac nowe wersje i nie falszuje markera buildu.
+   Test srodowiska nie jest dowodem udanej walki PvP.
+6. Poprawiono wybor RELEASE_NOTES w automatycznym budowaniu ZIP.
+7. Zachowano RPCN 1.10.0 protocol 32, Tailscale, porty 31313/3657,
+   NPUB31250 01.05, istniejace patche i zasady Private Match.
+8. Brak emulatora, gry, zapisow, kont i prywatnych kluczy w paczkach.
+
+ZAKRES WERYFIKACJI:
+Przejrzano skrypty z repo i wykonano kontrole spojnosc zmian.
+Nie wykonywano testu uruchomienia gry na komputerze uzytkownika.
+Uzytkownik sam potwierdzil dzialanie eventow na nowszym RPCS3.
+
