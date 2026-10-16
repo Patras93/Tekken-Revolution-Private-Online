@@ -8,12 +8,11 @@ if (-not (Test-Path -LiteralPath $configPath)) {
 $cfg = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
 $rpcs3 = [string]$cfg.rpcs3_directory
 $hostIp = [string]$cfg.host_tailscale_ip
-$expectedBuild = [string]$cfg.required_rpcs3_build
+$buildAtSetup = [string]$cfg.rpcs3_build_at_setup
 
 $rpcs3Exe = Join-Path $rpcs3 'rpcs3.exe'
 $game = Join-Path $rpcs3 'dev_hdd0\game\NPUB31250\USRDIR\EBOOT.BIN'
 $patch = Join-Path $rpcs3 'patches\NPUB31250_patch.yml'
-$marker = Join-Path $rpcs3 'patras1993_rpc3_build.txt'
 $rpcnConfig = Join-Path $rpcs3 'config\rpcn.yml'
 
 if (-not (Test-Path -LiteralPath $rpcs3Exe)) {
@@ -25,17 +24,9 @@ if (-not (Test-Path -LiteralPath $game)) {
 if (-not (Test-Path -LiteralPath $patch)) {
     throw 'Brak patcha Patras1993 Revolution. Uruchom ponownie Setup Online Guest.cmd.'
 }
-if (-not (Test-Path -LiteralPath $marker)) {
-    throw 'Brak potwierdzenia wersji RPCS3. Uruchom Update RPCS3 for Patras1993.cmd.'
-}
-
-$markerValue = (Get-Content -LiteralPath $marker -Raw).Trim()
-$supportedBuilds = @('0.0.43-20161-96ccd89c','0.0.43-20147-dfc0542a')
-if ($supportedBuilds -notcontains $markerValue) {
-    throw "Nieobslugiwany build RPCS3: $markerValue. Preferowany: 20161-96ccd89c; fallback: 20147-dfc0542a."
-}
-if ($expectedBuild -and $markerValue -ne $expectedBuild) {
-    Write-Host "UWAGA: konfiguracja zapisala $expectedBuild, a wykryty marker to $markerValue."
+# Wersja RPCS3 moze sie zmienic od Setup, nie blokuj nowego buildu.
+if ($buildAtSetup) {
+    Write-Host "RPCS3 w dniu konfiguracji: $buildAtSetup (informacyjnie)."
 }
 
 if (-not (Test-Path -LiteralPath $rpcnConfig)) {
@@ -56,7 +47,7 @@ if ($hostIp) {
 }
 
 Write-Host 'Patras1993 RPCN: OK'
-Write-Host ('RPCS3: ' + $markerValue)
+Write-Host 'RPCS3: OK (bez sztywnej blokady numeru buildu)'
 Write-Host 'Patch Revolution: OK'
 Write-Host 'Uruchamianie Tekken Revolution...'
 
