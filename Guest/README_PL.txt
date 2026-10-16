@@ -1,11 +1,11 @@
 TEKKEN REVOLUTION PRIVATE ONLINE - GUEST
-v2.2.1 RPCN DIRECT - TAILSCALE HOTFIX
+v2.2.2 RPCN DIRECT - AKTUALNY RPCS3
 
 ========================================
 CO MUSISZ MIEC
 ========================================
 
-- RPCS3 0.0.43-20161-96ccd89c (preferowany)
+- aktualny RPCS3 (stary build 20161 nie jest wymagany)
 - Tekken Revolution NPUB31250 01.05
 - Tailscale
 - folder Guest
@@ -32,7 +32,7 @@ Podaj tylko adres Tailscale hosta.
 
 Skrypt:
 - znajdzie RPCS3 z NPUB31250,
-- sprawdzi obslugiwany build RPCS3,
+- wykryje RPCS3 bez wymuszania starego buildu,
 - zainstaluje natywny patch Revolution,
 - ustawi RPCN bezposrednio na adres Tailscale hosta,
 - zachowa NPID/Password/Token,
@@ -80,17 +80,20 @@ RPCN -> adres Tailscale hosta -> TCP 31313 / UDP 3657
 Backend HTTPS 443, launcher BTB i domeny BTB nie sa potrzebne.
 
 ========================================
-RPCS3
+RPCS3 I PATCH EVENTOW
 ========================================
 
-Preferowany:
-0.0.43-20161-96ccd89c
+Dzialajacy nowszy RPCS3 pozostaw bez zmian.
+Setup i Start Guest nie wymuszaja wersji 20161 ani 20147.
+Setup NIE nadpisuje odmiennego patcha znajdujacego sie w RPCS3.
+Jesli uzywasz wlasnego dzialajacego patcha eventow, pozostanie na miejscu.
 
-Fallback:
-0.0.43-20147-dfc0542a
+Update RPCS3 for Patras1993.cmd:
+bezpieczna instrukcja aktualizacji; nie pobiera starej wersji,
+nie nadpisuje katalogu emulatora.
 
-Updater:
-Update RPCS3 for Patras1993.cmd
+Sam numer buildu nie potwierdza zgodnosci.
+Sprawdz osobno eventy, logowanie RPCN i walke PvP z drugim graczem.
 
 ========================================
 DOSTEPNOSC
