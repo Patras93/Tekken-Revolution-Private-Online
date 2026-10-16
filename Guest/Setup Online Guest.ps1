@@ -4,9 +4,6 @@ Write-Host ''
 Write-Host 'PATRAS1993 - TEKKEN REVOLUTION ONLINE GUEST'
 Write-Host ''
 
-$preferredBuild = '0.0.43-20161-96ccd89c'
-$fallbackBuild = '0.0.43-20147-dfc0542a'
-$acceptedBuilds = @($preferredBuild, $fallbackBuild)
 $nativePatchSource = Join-Path $PSScriptRoot 'Patras1993_NPUB31250_patch.yml'
 
 $hostIp = Read-Host 'Podaj adres Tailscale hosta Patras1993 (100.x.x.x)'
@@ -73,105 +70,28 @@ $game = Join-Path $rpcs3 'dev_hdd0\game\NPUB31250\USRDIR\EBOOT.BIN'
 Write-Host "RPCS3: $rpcs3"
 Write-Host 'Tekken Revolution NPUB31250: OK'
 
-$buildOk = $false
-$detectedBuild = $null
+# Wersja emulatora nie determinuje zgodnosci patcha gry NPUB31250.
+# Marker z poprzedniego uruchomienia nie moze byc dowodem aktualnego buildu.
 $buildMarker = Join-Path $rpcs3 'patras1993_rpc3_build.txt'
-
-function Get-GzipText([string]$Path) {
-    try {
-        $fs = [IO.File]::OpenRead($Path)
-        try {
-            $gz = New-Object IO.Compression.GZipStream($fs,[IO.Compression.CompressionMode]::Decompress)
-            try {
-                $sr = New-Object IO.StreamReader($gz)
-                try { return $sr.ReadToEnd() }
-                finally { $sr.Dispose() }
-            }
-            finally { $gz.Dispose() }
-        }
-        finally { $fs.Dispose() }
-    }
-    catch { return '' }
-}
-
-function Get-VersionEvidence {
-    $parts = New-Object 'System.Collections.Generic.List[string]'
-
-    try {
-        $vi = (Get-Item -LiteralPath $rpcs3Exe).VersionInfo
-        [void]$parts.Add([string]$vi.FileVersion)
-        [void]$parts.Add([string]$vi.ProductVersion)
-    } catch {}
-
-    $p = Get-Process rpcs3 -ErrorAction SilentlyContinue | Select-Object -First 1
-    if ($p -and $p.MainWindowTitle) {
-        [void]$parts.Add([string]$p.MainWindowTitle)
-    }
-
+$detectedBuild = 'nieustalony'
+$versionEvidence = ''
+try {
+    $vi = (Get-Item -LiteralPath $rpcs3Exe).VersionInfo
+    $versionEvidence = @([string]$vi.FileVersion, [string]$vi.ProductVersion) -join ' '
+} catch {}
+if ($versionEvidence -notmatch '(?i)0\.0\.\d+-\d+(?:-[a-f0-9]{8})?') {
     $rawLog = Join-Path $rpcs3 'RPCS3.log'
     if (Test-Path -LiteralPath $rawLog) {
-        try { [void]$parts.Add((Get-Content -LiteralPath $rawLog -Raw -ErrorAction Stop)) } catch {}
-    }
-
-    $gzLog = Join-Path $rpcs3 'RPCS3.log.gz'
-    if (Test-Path -LiteralPath $gzLog) {
-        $gzText = Get-GzipText $gzLog
-        if ($gzText) { [void]$parts.Add($gzText) }
-    }
-
-    if (Test-Path -LiteralPath $buildMarker) {
-        try { [void]$parts.Add((Get-Content -LiteralPath $buildMarker -Raw -ErrorAction Stop)) } catch {}
-    }
-
-    return ($parts -join [Environment]::NewLine)
-}
-
-$evidence = Get-VersionEvidence
-if ($evidence -match '0\.0\.43-20161-96ccd89c|20161-96ccd89c') {
-    $detectedBuild = $preferredBuild
-    $buildOk = $true
-}
-elseif ($evidence -match '0\.0\.43-20147-dfc0542a|20147-dfc0542a') {
-    $detectedBuild = $fallbackBuild
-    $buildOk = $true
-}
-
-if (-not $buildOk) {
-    $startedForCheck = $false
-    if (-not (Get-Process rpcs3 -ErrorAction SilentlyContinue)) {
-        Write-Host 'Sprawdzanie wersji RPCS3...'
-        Start-Process -FilePath $rpcs3Exe -WorkingDirectory $rpcs3 | Out-Null
-        $startedForCheck = $true
-        Start-Sleep -Seconds 3
-    }
-
-    $evidence = Get-VersionEvidence
-    if ($evidence -match '0\.0\.43-20161-96ccd89c|20161-96ccd89c') {
-        $detectedBuild = $preferredBuild
-        $buildOk = $true
-    }
-    elseif ($evidence -match '0\.0\.43-20147-dfc0542a|20147-dfc0542a') {
-        $detectedBuild = $fallbackBuild
-        $buildOk = $true
-    }
-
-    if ($startedForCheck) {
-        Get-Process rpcs3 -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+        try { $versionEvidence = ((Get-Content -LiteralPath $rawLog -TotalCount 80 -ErrorAction Stop) -join ' ') } catch {}
     }
 }
-
-if (-not $buildOk) {
-    throw 'Nieobslugiwany build RPCS3. Uruchom Guest\Update RPCS3 for Patras1993.cmd. Preferowany: 20161-96ccd89c; fallback: 20147-dfc0542a.'
+if ($versionEvidence -match '(?i)0\.0\.\d+-\d+(?:-[a-f0-9]{8})?') {
+    $detectedBuild = $Matches[0]
+    [IO.File]::WriteAllText($buildMarker, $detectedBuild, (New-Object System.Text.UTF8Encoding($false)))
 }
-
-[IO.File]::WriteAllText($buildMarker, $detectedBuild, (New-Object System.Text.UTF8Encoding($false)))
-
-if ($detectedBuild -eq $preferredBuild) {
-    Write-Host "RPCS3 build: $detectedBuild VERIFIED"
-}
-else {
-    Write-Host "RPCS3 build: $detectedBuild FALLBACK"
-}
+Write-Host "RPCS3: $detectedBuild"
+Write-Host 'Brak blokady numeru buildu. Patch NPUB31250 nalezy sprawdzic w grze.'
+Write-Host ''
 
 if (-not (Test-Path -LiteralPath $nativePatchSource)) {
     throw "Brak patcha Revolution w projekcie: $nativePatchSource"
@@ -185,8 +105,16 @@ $patchHashKey = 'PPU-1504b75ba97abccdf2d0a93dd93aaff10591a01e:'
 $patchDescriptionLine = '  "Patras1993 Revolution Runtime Patches":'
 
 New-Item -ItemType Directory -Path $patchDir -Force | Out-Null
-Copy-Item -LiteralPath $nativePatchSource -Destination $patchTarget -Force
-Write-Host "Patch Revolution: $patchTarget"
+if (-not (Test-Path -LiteralPath $patchTarget)) {
+    Copy-Item -LiteralPath $nativePatchSource -Destination $patchTarget -Force
+    Write-Host "Patch Revolution: zainstalowany $patchTarget"
+}
+elseif ((Get-FileHash -LiteralPath $patchTarget -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath $nativePatchSource -Algorithm SHA256).Hash) {
+    Write-Host 'UWAGA: istniejacy patch rozni sie od wersji w paczce. Pozostawiono go bez zmian, aby nie utracic dzialajacych eventow.'
+}
+else {
+    Write-Host 'Patch Revolution: zgodny z paczka.'
+}
 
 $configLines = @()
 if (Test-Path -LiteralPath $patchConfigPath) {
@@ -329,12 +257,12 @@ $configPath = Join-Path $PSScriptRoot 'guest_config.json'
 @{
     host_tailscale_ip = $hostIp
     rpcs3_directory = $rpcs3
-    required_rpcs3_build = $detectedBuild
+    rpcs3_build_at_setup = $detectedBuild
     game = 'NPUB31250'
 } | ConvertTo-Json | Set-Content -LiteralPath $configPath -Encoding UTF8
 
 Write-Host ''
-Write-Host 'GUEST v2.2.1 GOTOWY.'
+Write-Host 'GUEST v2.2.2 GOTOWY.'
 Write-Host "RPCS3: $detectedBuild"
 Write-Host 'Tekken Revolution: NPUB31250 01.05'
 Write-Host 'Patch: Patras1993 Revolution Runtime Patches'
