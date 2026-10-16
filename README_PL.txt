@@ -1,4 +1,4 @@
-TEKKEN REVOLUTION PRIVATE ONLINE - PATRAS1993 v2.2.0 RPCN DIRECT
+TEKKEN REVOLUTION PRIVATE ONLINE - PATRAS1993 v2.2.2 RPCN DIRECT
 
 ========================================
 ARCHITEKTURA v2.2.0
@@ -141,3 +141,21 @@ DOSTEPNOSC
 
 Skrypty sa tekstowe, klawiaturowe i przygotowane pod NVDA.
 Komunikaty podaja stan RPCN, Tailscale i patcha bez potrzeby odczytu elementow graficznych.
+
+
+========================================
+AKTUALIZACJA v2.2.2 (2026-10-16)
+========================================
+
+- Usunieto blokade dwoch starych buildow RPCS3 w Guest.
+- Instalator Guest nie nadpisuje odmiennego, dzialajacego patcha gry.
+- Start Guest nie wymaga starego pliku markera wersji emulatora.
+- Przycisk Update RPCS3 nie instaluje juz starej kompilacji 20161.
+- Test Host nie zapisuje falszywego markera wersji 20161.
+- Zachowano RPCN DIRECT, Tailscale, NPUB31250 01.05 i reguly Private Match.
+- Aktualizacja paczki NIE zawiera ani gry, ani plikow emulatora.
+
+UWAGA: lista zweryfikowanych 2 pazdziernika buildow w starszej
+sekcji to archiwalny wynik testow, a nie aktualne wymaganie.
+Uzytkownik potwierdzil dzialanie eventow na nowszym RPCS3.
+Pelne PvP z drugim graczem wymaga osobnego testu.
