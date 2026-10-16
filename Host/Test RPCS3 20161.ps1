@@ -5,7 +5,7 @@ $repoRoot = Split-Path -Parent $hostDir
 $configPath = Join-Path $hostDir 'host_config.json'
 $rpcnExe = Join-Path $repoRoot 'local_rpcn\rpcn.exe'
 
-Write-Host '=== TEST PATRAS1993 v2.2.0 / RPCS3 20161 ==='
+Write-Host '=== TEST PATRAS1993 v2.2.2 / RPCS3 (rozne buildy) ==='
 Write-Host ''
 
 if (-not (Test-Path -LiteralPath $configPath)) {
@@ -88,8 +88,9 @@ if(-not(Get-Process rpcs3 -ErrorAction SilentlyContinue)){
     Start-Sleep -Seconds 3
 }
 $evidence=Get-Rpcs3Evidence
-$versionOk=$evidence -match '0\.0\.43-20161-96ccd89c|20161-96ccd89c'
-Result 'RPCS3 20161' $versionOk
+$versionOk = Test-Path -LiteralPath $rpcs3Exe
+Result 'RPCS3 EXE (bez blokady buildu)' $versionOk
+Write-Host 'UWAGA: test srodowiska nie potwierdza udanej walki PvP. Wykonaj test gry osobno.'
 if($started){Get-Process rpcs3 -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue}
 
 Result 'Tekken Revolution NPUB31250' (Test-Path $game)
@@ -133,10 +134,9 @@ $ok=$versionOk -and (Test-Path $game) -and (Test-Path $patch) -and $privateMatch
 
 Write-Host ''
 if($ok){
-    [IO.File]::WriteAllText((Join-Path $rpcs3Dir 'patras1993_rpc3_build.txt'),'0.0.43-20161-96ccd89c',[Text.UTF8Encoding]::new($false))
-    Write-Host 'TEST PATRAS1993 v2.2.0: PASS.'
+    Write-Host 'TEST PATRAS1993 v2.2.2: PASS.'
     Write-Host 'Backend HTTPS 443 nie jest wymagany.'
     exit 0
 }
-Write-Host 'TEST PATRAS1993 v2.2.0: FAIL.'
+Write-Host 'TEST PATRAS1993 v2.2.2: FAIL.'
 exit 2
