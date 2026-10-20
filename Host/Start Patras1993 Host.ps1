@@ -60,6 +60,15 @@ if(-not(Test-Path $rpcnCert) -or -not(Test-Path $rpcnKey)){
     if($p.ExitCode -ne 0 -or -not(Test-Path $rpcnCert) -or -not(Test-Path $rpcnKey)){throw 'Nie udalo sie wygenerowac certyfikatu RPCN.'}
 }
 
+# Sprawdz, czy port faktycznie nalezy do naszego rpcn.exe.
+$listener = Get-NetTCPConnection -State Listen -LocalPort 31313 -ErrorAction SilentlyContinue | Select-Object -First 1
+if ($listener) {
+    $ownerProcess = Get-CimInstance Win32_Process -Filter ("ProcessId=" + $listener.OwningProcess) -ErrorAction SilentlyContinue
+    $ownerPath = if ($ownerProcess) { [string]$ownerProcess.ExecutablePath } else { '' }
+    if (-not $ownerPath -or -not [string]::Equals([IO.Path]::GetFullPath($ownerPath), [IO.Path]::GetFullPath($rpcn), [StringComparison]::OrdinalIgnoreCase)) {
+        throw "TCP 31313 nalezy do innego procesu: PID $($listener.OwningProcess), EXE $ownerPath. Zatrzymaj stary serwer; nowy RPCN nie zostal uruchomiony."
+    }
+}
 $tcp=TcpPortOpen 31313
 $udp=UdpPortOpen 3657
 if(-not $tcp){
