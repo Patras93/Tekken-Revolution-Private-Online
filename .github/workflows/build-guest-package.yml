@@ -47,6 +47,24 @@ jobs:
           "version=$version" >> $env:GITHUB_OUTPUT
           Write-Host "Package version: $version"
 
+      - name: Install verified RPCN 1.12.1 for Host package
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $url = 'https://github.com/RipleyTom/rpcn/releases/download/1.12.1/rpcn-win.zip'
+          $expected = 'fd2fb79056ce228b4f26cf6597e7f8d8bfec044565e6ffe1e87f324de9219b2e'
+          $zip = Join-Path $env:RUNNER_TEMP 'rpcn-1.12.1.zip'
+          $out = Join-Path $env:RUNNER_TEMP 'rpcn-unpack'
+          Invoke-WebRequest -Uri $url -OutFile $zip
+          $actual = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actual -ne $expected) { throw "RPCN SHA256 mismatch: $actual" }
+          Expand-Archive -LiteralPath $zip -DestinationPath $out -Force
+          $binary = Get-ChildItem -LiteralPath $out -Filter rpcn.exe -File -Recurse | Select-Object -First 1
+          if (-not $binary) { throw 'Missing rpcn.exe' }
+          Copy-Item -LiteralPath $binary.FullName -Destination 'local_rpcn/rpcn.exe' -Force
+          [IO.File]::WriteAllText((Join-Path (Get-Location) 'local_rpcn/rpcn_version.txt'), '1.12.1', [Text.UTF8Encoding]::new($false))
+          Write-Host 'Verified official RPCN 1.12.1 packaged.'
+
       - name: Build ZIP packages
         id: package
         shell: pwsh
