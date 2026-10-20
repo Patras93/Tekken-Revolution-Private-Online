@@ -1,0 +1,15 @@
+TEKKEN REVOLUTION PRIVATE ONLINE v2.2.3
+RPCN 1.12.1 / NOWY RPCS3 / HOST + GUEST
+2026-10-20
+
+1. Host Setup/Start wymagaja RPCN 1.12.1 zamiast 1.10.0.
+2. Host ZIP zawiera oficjalny RPCN 1.12.1 pobrany na etapie budowania, po kontroli SHA256 archiwum.
+3. Dodano Host/Repair RPCN for New RPCS3.cmd do naprawy istniejacej instalacji.
+4. Poprawiono test Host oraz wykrywanie obcego procesu na TCP 31313.
+5. Guest dziala na nowym RPCS3 bez downgrade; zachowano patche NPUB31250 i eventy.
+6. Zachowano konta, certyfikaty, klucze, Tailscale i Private Match.
+7. Nowy protokol zostal potwierdzony przez uzytkownika na prywatnym serwerze.
+8. Test PvP HOST-GUEST nalezy wykonac oddzielnie.
+
+WAZNE: stare paczki v2.2.2 zawieraja RPCN 1.10.0.
+Nie kasuj danych serwera ani katalogu local_rpcn przy aktualizacji; zachowaj kopie zapasowa.
