@@ -8,7 +8,7 @@ $rpcnVersionFile = Join-Path $rpcnDir 'rpcn_version.txt'
 $hostConfigFile = Join-Path $root 'host_config.json'
 $preferredRpcs3 = 'E:\instalacje gier\rpcs3-v0.0.43-20146-4d88114c_win64\rpcs3.exe'
 
-$requiredRpcnVersion = '1.10.0'
+$requiredRpcnVersion = '1.12.1'
 
 # v2.2.0: zatrzymaj pozostalosci starego backendu HTTPS, jesli jeszcze dzialaja.
 Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
@@ -21,8 +21,8 @@ Get-CimInstance Win32_Process -ErrorAction SilentlyContinue | Where-Object {
 Get-NetFirewallRule -DisplayName 'Patras1993 Tekken Revolution HTTPS' -ErrorAction SilentlyContinue |
     Remove-NetFirewallRule -ErrorAction SilentlyContinue
 
-$rpcnZipUrl = 'https://github.com/RipleyTom/rpcn/releases/download/1.10.0/rpcn-win.zip'
-$rpcnZipSha256 = '439e4f08bd8485194b36fb33b6da86a21a97adda56c968c75872918cf64ea663'
+$rpcnZipUrl = 'https://github.com/RipleyTom/rpcn/releases/download/1.12.1/rpcn-win.zip'
+$rpcnZipSha256 = 'fd2fb79056ce228b4f26cf6597e7f8d8bfec044565e6ffe1e87f324de9219b2e'
 
 function Get-RpcnActualVersion {
     param([Parameter(Mandatory=$true)][string]$Path)
@@ -54,7 +54,7 @@ function Get-RpcnActualVersion {
 }
 
 function Install-Rpcn1100 {
-    Write-Host "RPCN: instalacja wersji $requiredRpcnVersion (protocol 32)."
+    Write-Host "RPCN: instalacja wersji $requiredRpcnVersion (aktualny protokol RPCN)."
     Write-Host 'RPCN: pobieranie oficjalnego rpcn-win.zip...'
 
     $tmpRoot = Join-Path $env:TEMP ('Patras1993-RPCN-' + [guid]::NewGuid().ToString('N'))
@@ -75,7 +75,7 @@ function Install-Rpcn1100 {
         Expand-Archive -LiteralPath $zip -DestinationPath $unpack -Force
         $newExe = Get-ChildItem -LiteralPath $unpack -Filter 'rpcn.exe' -File -Recurse | Select-Object -First 1
         if (-not $newExe) {
-            throw 'Nie znaleziono rpcn.exe w oficjalnym archiwum RPCN 1.10.0.'
+            throw 'Nie znaleziono rpcn.exe w oficjalnym archiwum RPCN 1.12.1.'
         }
 
         New-Item -ItemType Directory -Path $rpcnDir -Force | Out-Null
@@ -89,7 +89,7 @@ function Install-Rpcn1100 {
         }
 
         if (Test-Path -LiteralPath $rpcnExe) {
-            Copy-Item -LiteralPath $rpcnExe -Destination (Join-Path $rpcnDir 'rpcn.exe.before-1.10.0.bak') -Force
+            Copy-Item -LiteralPath $rpcnExe -Destination (Join-Path $rpcnDir 'rpcn.exe.before-1.12.1.bak') -Force
         }
 
         Copy-Item -LiteralPath $newExe.FullName -Destination $rpcnExe -Force
@@ -104,7 +104,7 @@ function Install-Rpcn1100 {
     }
 
     [IO.File]::WriteAllText($rpcnVersionFile, $actual, [Text.UTF8Encoding]::new($false))
-    Write-Host "RPCN: rzeczywista wersja $actual gotowa (protocol 32)."
+    Write-Host "RPCN: rzeczywista wersja $actual gotowa (aktualny protokol RPCN)."
 }
 
 $marker = $null
@@ -116,13 +116,13 @@ Write-Host "RPCN marker: $marker"
 Write-Host "RPCN rzeczywisty: $actualRpcn"
 
 if (-not (Test-Path -LiteralPath $rpcnExe) -or $actualRpcn -ne $requiredRpcnVersion) {
-    Write-Host "RPCN: wymagana naprawa do v$requiredRpcnVersion (protocol 32)."
+    Write-Host "RPCN: wymagana naprawa do v$requiredRpcnVersion (aktualny protokol RPCN)."
     Install-Rpcn1100
     $actualRpcn = Get-RpcnActualVersion -Path $rpcnExe
 }
 else {
     [IO.File]::WriteAllText($rpcnVersionFile, $actualRpcn, [Text.UTF8Encoding]::new($false))
-    Write-Host "RPCN: rzeczywista wersja $actualRpcn OK (protocol 32)."
+    Write-Host "RPCN: rzeczywista wersja $actualRpcn OK (aktualny protokol RPCN)."
 }
 
 $candidates = @(
