@@ -6,7 +6,7 @@ $rpcn = Join-Path $rpcnDir 'rpcn.exe'
 $rpcnVersionFile = Join-Path $rpcnDir 'rpcn_version.txt'
 $rpcnCert = Join-Path $rpcnDir 'cert.pem'
 $rpcnKey = Join-Path $rpcnDir 'key.pem'
-$requiredRpcnVersion = '1.10.0'
+$requiredRpcnVersion = '1.12.1'
 $logDir = Join-Path $PSScriptRoot 'logs'
 New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 $rpcnOutLog = Join-Path $logDir 'rpcn.out.log'
@@ -52,7 +52,7 @@ if($actual -ne $requiredRpcnVersion){
     throw "RPCN rzeczywisty to v$actual, wymagany v$requiredRpcnVersion. Uruchom Setup Patras1993 Host.cmd jako administrator."
 }
 [IO.File]::WriteAllText($rpcnVersionFile,$actual,[Text.UTF8Encoding]::new($false))
-Write-Host "RPCN rzeczywista wersja: $actual (protocol 32)"
+Write-Host "RPCN rzeczywista wersja: $actual (aktualny protokol RPCN)"
 
 if(-not(Test-Path $rpcnCert) -or -not(Test-Path $rpcnKey)){
     Write-Host 'RPCN: generowanie cert.pem/key.pem...'
