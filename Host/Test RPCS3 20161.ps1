@@ -104,7 +104,7 @@ if(Test-Path $patchConfig){
 Result 'Private Match ON' $privateMatchOk
 
 $rpcnVersion=Get-RpcnActualVersion $rpcnExe
-Result 'RPCN 1.10.0 / protocol 32' ($rpcnVersion -eq '1.10.0') $rpcnVersion
+Result 'RPCN 1.12.1 / nowy protokol' ($rpcnVersion -eq '1.12.1') $rpcnVersion
 
 $rpcnDirect=$false
 if(Test-Path $rpcnConfig){
@@ -130,7 +130,7 @@ if($tailscale){try{$tailscaleIp=(& $tailscale.Source ip -4 2>$null | Select-Obje
 Result 'Tailscale' ([bool]$tailscaleIp) $tailscaleIp
 
 $ok=$versionOk -and (Test-Path $game) -and (Test-Path $patch) -and $privateMatchOk -and
-    ($rpcnVersion -eq '1.10.0') -and $rpcnDirect -and $tcp -and $udp -and [bool]$tailscaleIp
+    ($rpcnVersion -eq '1.12.1') -and $rpcnDirect -and $tcp -and $udp -and [bool]$tailscaleIp
 
 Write-Host ''
 if($ok){
